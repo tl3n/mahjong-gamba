@@ -11,5 +11,6 @@ config_version=5
 [application]
 
 config/name="mahjong gamba"
+run/main_scene="uid://42hhoxqbps4f"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
