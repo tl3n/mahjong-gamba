@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://c81wbqt5hm8l3"]
+[gd_scene load_steps=3 format=3 uid="uid://2egkv5vfyrve"]
 
 [ext_resource type="Script" uid="uid://40pj8bklhl67" path="res://scripts/ui/inventory_ui.gd" id="1_s6ek7"]
-[ext_resource type="PackedScene" uid="uid://nc2hodxlhoyt" path="res://scenes/ui/ItemSlot.tscn" id="2_avmd0"]
+[ext_resource type="PackedScene" path="res://scenes/ui/ItemSlot.tscn" id="2_avmd0"]
 
 [node name="Inventory" type="Control"]
 layout_mode = 3
@@ -28,9 +28,11 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="Inventory" type="Label" parent="Window/HBoxContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 
 [node name="SlotsGrid" type="GridContainer" parent="Window/HBoxContainer/VBoxContainer"]
+visible = false
 layout_mode = 2
 columns = 4
 
@@ -44,6 +46,27 @@ text = "Sell"
 [node name="CloseButton" type="Button" parent="Window/HBoxContainer/VBoxContainer/Buttons"]
 layout_mode = 2
 text = "Close"
+
+[node name="SpiritsSection" type="VBoxContainer" parent="Window/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Window/HBoxContainer/VBoxContainer/SpiritsSection"]
+layout_mode = 2
+
+[node name="SpiritsGrid" type="GridContainer" parent="Window/HBoxContainer/VBoxContainer/SpiritsSection"]
+layout_mode = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 5
+
+[node name="BeersSection" type="VBoxContainer" parent="Window/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Window/HBoxContainer/VBoxContainer/BeersSection"]
+layout_mode = 2
+
+[node name="BeersGrid" type="GridContainer" parent="Window/HBoxContainer/VBoxContainer/BeersSection"]
+layout_mode = 2
 
 [node name="VBoxContainer2" type="VBoxContainer" parent="Window/HBoxContainer"]
 custom_minimum_size = Vector2(200, 200)
