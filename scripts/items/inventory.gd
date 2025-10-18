@@ -11,7 +11,6 @@ var max_beers: int = 2        # максимум пива
 var money: int = 10           # стартова кількість монет
 
 func _ready():
-	# Тільки для тестування при порожньому інвентарі
 	if spirits.is_empty() and beers.is_empty():
 		var s1 = Spirit.new()
 		s1.id = "spirit_fire"

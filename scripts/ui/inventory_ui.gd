@@ -14,7 +14,10 @@ extends Control
 @onready var item_name_label: Label = $Window/HBoxContainer/VBoxContainer2/ItemDetails/ItemName
 @onready var item_desc_label: Label = $Window/HBoxContainer/VBoxContainer2/ItemDetails/ItemDesc
 @onready var money_label: Label = $Window/HBoxContainer/VBoxContainer2/MoneyLabel
+
+# Кнопки
 @onready var close_button: Button = $Window/HBoxContainer/VBoxContainer/Buttons/CloseButton
+@onready var sell_button: Button = $Window/HBoxContainer/VBoxContainer/Buttons/Sell
 
 # Слот-сцена
 @export var slot_scene: PackedScene
@@ -36,9 +39,11 @@ func _ready():
 	inventory_node.connect("inventory_changed", Callable(self, "_on_inventory_changed"))
 	inventory_node.connect("money_changed", Callable(self, "_on_money_changed"))
 	close_button.connect("pressed", Callable(self, "_on_close_pressed"))
+	sell_button.connect("pressed", Callable(self, "_on_sell_button_pressed"))
 
 	_create_slots()
 	_refresh_ui()
+	_update_sell_button_state()
 
 func _on_close_pressed():
 	queue_free()
@@ -64,7 +69,7 @@ func _create_spirit_slots():
 	# Створюємо нові слоти для духів
 	for i in inventory_node.max_spirits:
 		var s = slot_scene.instantiate() as Button
-		s.custom_minimum_size = Vector2(80, 80)  # Менший розмір слота
+		s.custom_minimum_size = Vector2(80, 80)
 		s.index = i
 		s.connect("pressed_slot", Callable(self, "_on_spirit_slot_pressed"))
 		spirits_grid.add_child(s)
@@ -94,12 +99,14 @@ func _on_spirit_slot_pressed(slot_index):
 	selected_item = it
 	selected_type = "spirit"
 	_update_item_details()
+	_update_sell_button_state()
 
 func _on_beer_slot_pressed(slot_index):
 	var it = inventory_node.get_beer_at(slot_index)
 	selected_item = it
 	selected_type = "beer"
 	_update_item_details()
+	_update_sell_button_state()
 
 func _update_item_details():
 	if selected_item == null:
@@ -114,7 +121,8 @@ func _update_item_details():
 	
 	var details = selected_item.description + "\n\n"
 	details += "Рідкість: " + selected_item.rarity + "\n"
-	details += "Ціна: " + str(selected_item.price) + " монет\n"
+	details += "Ціна покупки: " + str(selected_item.price) + " монет\n"
+	details += "Ціна продажу: " + str(int(selected_item.price * 0.5)) + " монет\n\n"
 	
 	if selected_item is Spirit:
 		details += "Тип: Дух (постійний ефект)\n"
@@ -130,17 +138,36 @@ func _on_inventory_changed():
 	_refresh_ui()
 
 func _on_money_changed(new_money):
-	money_label.text = "Монети: %d" % new_money
+	money_label.text = "Монети: %d¥" % new_money
 
 func _on_sell_button_pressed():
 	if selected_item == null:
+		print("Немає вибраного предмета для продажу")
 		return
-		
+	
+	# Зберігаємо дані перед видаленням
+	var item_name = selected_item.name
 	var price_back = int(selected_item.price * 0.5)
+	
+	# Видаляємо предмет та додаємо гроші
 	inventory_node.remove_item(selected_item)
 	inventory_node.add_money(price_back)
+	
+	print("Продано %s за %d монет" % [item_name, price_back])
+	
+	# Скидаємо вибір
 	selected_item = null
+	selected_type = ""
 	_refresh_ui()
+	_update_sell_button_state()
+
+func _update_sell_button_state():
+	sell_button.disabled = (selected_item == null)
+	if selected_item != null:
+		var sell_price = int(selected_item.price * 0.5)
+		sell_button.text = "Продати (%d¥)" % sell_price
+	else:
+		sell_button.text = "Продати"
 
 func _refresh_ui():
 	# Оновлюємо слоти духів

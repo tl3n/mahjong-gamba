@@ -1,0 +1,196 @@
+# res://scripts/item_database.gd
+extends Node
+class_name ItemDatabase
+
+# База всіх духів
+static var spirits_data = [
+	{
+		"id": "spirit_fire",
+		"name": "Дух Вогню",
+		"description": "Додає +4 до масті Вогню",
+		"rarity": "Міфічна",
+		"price": 8,
+		"effect_type": "mansion_multiplier",
+		"effect_value": 4.0,
+		"condition": "suit=fire"
+	},
+	{
+		"id": "spirit_wind",
+		"name": "Дух Вітру",
+		"description": "Додає +2 до всіх мастей",
+		"rarity": "Легендарна",
+		"price": 10,
+		"effect_type": "all_mansion_bonus",
+		"effect_value": 2.0,
+		"condition": ""
+	},
+	{
+		"id": "spirit_water",
+		"name": "Дух Води",
+		"description": "Додає +3 до масті Води",
+		"rarity": "Міфічна",
+		"price": 8,
+		"effect_type": "mansion_multiplier",
+		"effect_value": 3.0,
+		"condition": "suit=water"
+	},
+	{
+		"id": "spirit_earth",
+		"name": "Дух Землі",
+		"description": "Додає +5 до пар",
+		"rarity": "Історична",
+		"price": 6,
+		"effect_type": "combo_bonus",
+		"effect_value": 5.0,
+		"condition": "type=pair"
+	},
+	{
+		"id": "spirit_lightning",
+		"name": "Дух Блискавки",
+		"description": "+1 додатковий хід кожного раунду",
+		"rarity": "Легендарна",
+		"price": 10,
+		"effect_type": "extra_turn",
+		"effect_value": 1.0,
+		"condition": ""
+	},
+	{
+		"id": "spirit_moon",
+		"name": "Дух Місяця",
+		"description": "Подвоює очки за понги",
+		"rarity": "Міфічна",
+		"price": 8,
+		"effect_type": "combo_bonus",
+		"effect_value": 2.0,
+		"condition": "type=pong"
+	},
+	{
+		"id": "spirit_sun",
+		"name": "Дух Сонця",
+		"description": "+3 монети після кожного раунду",
+		"rarity": "Історична",
+		"price": 6,
+		"effect_type": "money_bonus",
+		"effect_value": 3.0,
+		"condition": ""
+	},
+	{
+		"id": "spirit_dragon",
+		"name": "Дух Дракона",
+		"description": "×1.5 до всіх комбінацій",
+		"rarity": "Легендарна",
+		"price": 10,
+		"effect_type": "global_multiplier",
+		"effect_value": 1.5,
+		"condition": ""
+	}
+]
+
+static var beers_data = [
+	{
+		"id": "beer_extra_draw",
+		"name": "Пиво: Додатковий добір",
+		"description": "Дозволяє тягнути додатковий тайл цього раунду",
+		"rarity": "Історична",
+		"price": 3,
+		"round_effect": "extra_draw",
+		"duration": 1,
+		"bonus_value": 1.0
+	},
+	{
+		"id": "beer_double_points",
+		"name": "Пиво: Подвійні очки",
+		"description": "Подвоює всі очки цього раунду",
+		"rarity": "Міфічна",
+		"price": 4,
+		"round_effect": "double_points",
+		"duration": 1,
+		"bonus_value": 2.0
+	},
+	{
+		"id": "beer_vision",
+		"name": "Пиво: Бачення",
+		"description": "Показує наступні 3 тайли в колоді",
+		"rarity": "Історична",
+		"price": 3,
+		"round_effect": "reveal_tiles",
+		"duration": 1,
+		"bonus_value": 3.0
+	},
+	{
+		"id": "beer_fortune",
+		"name": "Пиво: Удача",
+		"description": "+5 монет після завершення раунду",
+		"rarity": "Історична",
+		"price": 3,
+		"round_effect": "bonus_money",
+		"duration": 1,
+		"bonus_value": 5.0
+	},
+	{
+		"id": "beer_combo",
+		"name": "Пиво: Комбо",
+		"description": "Перша комбінація дає ×3 очки",
+		"rarity": "Міфічна",
+		"price": 4,
+		"round_effect": "first_combo_boost",
+		"duration": 1,
+		"bonus_value": 3.0
+	},
+	{
+		"id": "beer_wild",
+		"name": "Пиво: Джокер",
+		"description": "Один випадковий тайл стає універсальним",
+		"rarity": "Легендарна",
+		"price": 5,
+		"round_effect": "wild_tile",
+		"duration": 1,
+		"bonus_value": 1.0
+	}
+]
+
+# Створює Spirit об'єкт з даних
+static func create_spirit_from_data(data: Dictionary) -> Spirit:
+	var s = Spirit.new()
+	s.id = data.get("id", "")
+	s.name = data.get("name", "")
+	s.description = data.get("description", "")
+	s.rarity = data.get("rarity", "Історична")
+	s.price = data.get("price", 0)
+	s.type = "дух"
+	s.effect_type = data.get("effect_type", "")
+	s.effect_value = data.get("effect_value", 0.0)
+	s.condition = data.get("condition", "")
+	s.permanent = true
+	return s
+
+# Створює Beer об'єкт з даних
+static func create_beer_from_data(data: Dictionary) -> Beer:
+	var b = Beer.new()
+	b.id = data.get("id", "")
+	b.name = data.get("name", "")
+	b.description = data.get("description", "")
+	b.rarity = data.get("rarity", "Історична")
+	b.price = data.get("price", 0)
+	b.type = "пиво"
+	b.round_effect = data.get("round_effect", "")
+	b.duration = data.get("duration", 1)
+	b.bonus_value = data.get("bonus_value", 0.0)
+	return b
+
+# Отримати випадковий дух
+static func get_random_spirit() -> Spirit:
+	var data = spirits_data[randi() % spirits_data.size()]
+	return create_spirit_from_data(data)
+
+# Отримати випадкове пиво
+static func get_random_beer() -> Beer:
+	var data = beers_data[randi() % beers_data.size()]
+	return create_beer_from_data(data)
+
+# Отримати випадковий предмет (дух або пиво)
+static func get_random_item() -> Item:
+	if randf() < 0.6:  # 60% шанс духа, 40% пива
+		return get_random_spirit()
+	else:
+		return get_random_beer()
