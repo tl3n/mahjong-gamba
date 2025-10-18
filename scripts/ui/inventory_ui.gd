@@ -43,6 +43,7 @@ func _ready():
 
 	_create_slots()
 	_refresh_ui()
+	_update_money_display()
 	_update_sell_button_state()
 
 func _on_close_pressed():
@@ -137,8 +138,8 @@ func _update_item_details():
 func _on_inventory_changed():
 	_refresh_ui()
 
-func _on_money_changed(new_money):
-	money_label.text = "Монети: %d¥" % new_money
+func _on_money_changed(_new_money):
+	money_label.text = "Монети: %d¥" % inventory_node.money
 
 func _on_sell_button_pressed():
 	if selected_item == null:
@@ -149,13 +150,13 @@ func _on_sell_button_pressed():
 	var item_name = selected_item.name
 	var price_back = int(selected_item.price * 0.5)
 	
-	# Видаляємо предмет та додаємо гроші
+	# Видаляємо та отримуємо гроші
 	inventory_node.remove_item(selected_item)
 	inventory_node.add_money(price_back)
 	
 	print("Продано %s за %d монет" % [item_name, price_back])
 	
-	# Скидаємо вибір
+	# Очищаємо вибір
 	selected_item = null
 	selected_type = ""
 	_refresh_ui()
@@ -195,4 +196,7 @@ func _refresh_ui():
 		selected_item = null
 		
 	_update_item_details()
-	_on_money_changed(inventory_node.money)
+	_update_money_display()
+
+func _update_money_display():
+	money_label.text = "Монети: %d¥" % inventory_node.money

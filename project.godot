@@ -14,3 +14,9 @@ config/name="mahjong gamba"
 run/main_scene="uid://dui1djxefnu5a"
 config/features=PackedStringArray("4.5", "Forward Plus")
 config/icon="res://icon.svg"
+
+[autoload]
+
+Inventory1="*res://scripts/items/inventory.gd"
+GameManager="*res://scripts/game_manager.gd"
+SaveSystem="*res://scripts/save_system.gd"

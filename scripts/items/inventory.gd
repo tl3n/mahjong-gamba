@@ -11,41 +11,9 @@ var max_beers: int = 2        # максимум пива
 var money: int = 10           # стартова кількість монет
 
 func _ready():
-	if spirits.is_empty() and beers.is_empty():
-		var s1 = Spirit.new()
-		s1.id = "spirit_fire"
-		s1.name = "Дух Вогню"
-		s1.description = "Додає +4 до масті Вогню"
-		s1.price = 8
-		s1.rarity = "Міфічна"
-		s1.type = "дух"
-		s1.effect_type = "mansion_multiplier"
-		s1.effect_value = 4.0
-		spirits.append(s1)
-
-		var b1 = Beer.new()
-		b1.id = "beer_x1"
-		b1.name = "Пиво: Додатковий добір"
-		b1.description = "Дозволяє тягнути додатковий тайл цього раунду."
-		b1.price = 3
-		b1.rarity = "Історична"
-		b1.type = "пиво"
-		b1.round_effect = "extra_draw"
-		b1.duration = 1
-		beers.append(b1)
-
-		var s2 = Spirit.new()
-		s2.id = "spirit_wind"
-		s2.name = "Дух Вітру"
-		s2.description = "Додає +2 до всіх мастей"
-		s2.price = 10
-		s2.rarity = "Легендарна"
-		s2.type = "дух"
-		s2.effect_type = "all_mansion_bonus"
-		s2.effect_value = 2.0
-		spirits.append(s2)
-
-	emit_signal("inventory_changed")
+	# Тестові предмети більше не створюються автоматично
+	# Вони будуть завантажені через SaveSystem або створені при новій грі
+	pass
 
 func add_item(item):
 	if item is Spirit:

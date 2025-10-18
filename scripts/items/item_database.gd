@@ -86,6 +86,7 @@ static var spirits_data = [
 	}
 ]
 
+# База всього пива
 static var beers_data = [
 	{
 		"id": "beer_extra_draw",
