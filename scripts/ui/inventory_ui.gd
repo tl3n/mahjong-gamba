@@ -28,11 +28,11 @@ var selected_type: String = ""  # "spirit" або "beer"
 func _ready():
 	# Знаходимо Inventory
 	var inv_node = get_node_or_null("/root/Inventory")
-	if inv_node and inv_node is Inventory:
+	if inv_node and inv_node is Inventory1:
 		inventory_node = inv_node
 	else:
 		# Для тесту створимо тимчасовий Inventory
-		inventory_node = Inventory.new()
+		inventory_node = Inventory1.new()
 		get_tree().get_root().add_child(inventory_node)
 		inventory_node.name = "Inventory"
 

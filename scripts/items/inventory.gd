@@ -1,5 +1,5 @@
 extends Node
-class_name Inventory
+class_name Inventory1
 
 signal inventory_changed
 signal money_changed(new_money)

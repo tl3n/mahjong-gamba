@@ -1,4 +1,3 @@
-# res://scripts/shop.gd
 extends Control
 
 # UI елементи
@@ -185,7 +184,6 @@ func _on_money_changed(_new_money):
 	_update_money_display()
 
 func _on_start_blind_pressed():
-	# Зберігаємо гру перед початком блайнда
 	var save_system = get_node_or_null("/root/SaveSystem")
 	if save_system:
 		save_system.save_game()

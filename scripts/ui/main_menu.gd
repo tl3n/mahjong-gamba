@@ -3,7 +3,6 @@ extends Control
 
 func _on_start_button_pressed() -> void:
 	var save_system = get_node_or_null("/root/SaveSystem")
-	#TODO: after initializing a new game
 	if save_system:
 		if save_system.has_save():
 			print("saved game exists, loading")
@@ -15,16 +14,15 @@ func _on_start_button_pressed() -> void:
 	get_tree().change_scene_to_file("res://scenes/main/shop_scene.tscn")
 	
 func _initialize_new_game():
-	# Creates some items in inventory to test later in inventory/shop screen
 	var inventory = get_node_or_null("/root/Inventory")
 	if not inventory:
+		print("❌ ПОМИЛКА: Inventory не знайдено!")
 		return
 	
 	inventory.spirits.clear()
 	inventory.beers.clear()
 	inventory.money = 10
 	
-	# Some start items
 	var s1 = Spirit.new()
 	s1.id = "spirit_fire"
 	s1.name = "Дух Вогню"
@@ -35,7 +33,7 @@ func _initialize_new_game():
 	s1.effect_type = "mansion_multiplier"
 	s1.effect_value = 4.0
 	inventory.spirits.append(s1)
-
+	
 	var b1 = Beer.new()
 	b1.id = "beer_extra_draw"
 	b1.name = "Пиво: Додатковий добір"
@@ -46,6 +44,11 @@ func _initialize_new_game():
 	b1.round_effect = "extra_draw"
 	b1.duration = 1
 	inventory.beers.append(b1)
+	
+	print("✅ Створено предмети:")
+	print("   Spirits: ", inventory.spirits.size())
+	print("   Beers: ", inventory.beers.size())
+	print("   Money: ", inventory.money)
 	
 	inventory.emit_signal("inventory_changed")
 	inventory.emit_signal("money_changed", inventory.money)
