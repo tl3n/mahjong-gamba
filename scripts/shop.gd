@@ -1,13 +1,10 @@
-# res://scripts/shop.gd
 extends Control
 
 @onready var shop_slots_container: HBoxContainer = $VBoxContainer/ShopSection/ShopSlotsContainer
 @onready var reroll_button: Button = $VBoxContainer/ShopSection/RerollButton
-@onready var start_blind_button: Button = $VBoxContainer/StartBlindButton
+@onready var start_blind_button: Button = $StartBlindButton
 @onready var money_label: Label = $VBoxContainer/MoneyLabel
 @onready var inventory_panel: Control = $VBoxContainer/InventoryPanel
-
-@export var player_item_display_scene: PackedScene
 
 var inventory_node = null
 var shop_items: Array = []
@@ -15,13 +12,11 @@ var reroll_cost: int = 3
 var reroll_count: int = 0
 
 func _ready():
-	# singleton Inventory (autoload node with name "Inventory")
 	inventory_node = Inventory
 	if inventory_node == null:
 		push_error("Inventory singleton not found in Autoload!")
 		return
 
-	# Підключаємо сигнали
 	inventory_node.connect("money_changed", Callable(self, "_on_money_changed"))
 	reroll_button.connect("pressed", Callable(self, "_on_reroll_pressed"))
 	start_blind_button.connect("pressed", Callable(self, "_on_start_blind_pressed"))
@@ -30,12 +25,10 @@ func _ready():
 	var inv_instance = inv_scene.instantiate()
 	inventory_panel.add_child(inv_instance)
 
-	# Hide the close button
 	var close_button = inv_instance.get_node_or_null("HBoxContainer/VBoxContainer/Buttons/CloseButton")
 	if close_button:
 		close_button.visible = false
 		
-	# Ініціалізація
 	_generate_shop_items()
 	_create_shop_slots()
 	_update_reroll_button()
@@ -79,7 +72,7 @@ func _create_shop_slot(index: int) -> Control:
 	slot_container.add_child(rarity_label)
 
 	var buy_button = Button.new()
-	buy_button.text = "Купити (%d¥)" % shop_items[index].price
+	buy_button.text = "Buy (%d¥)" % shop_items[index].price
 	buy_button.connect("pressed", Callable(self, "_on_buy_pressed").bind(index))
 	slot_container.add_child(buy_button)
 
@@ -87,9 +80,9 @@ func _create_shop_slot(index: int) -> Control:
 
 func _get_rarity_color(rarity: String) -> Color:
 	match rarity:
-		"Історична": return Color(0.7, 0.7, 0.7)
-		"Міфічна": return Color(0.5, 0.5, 1.0)
-		"Легендарна": return Color(1.0, 0.8, 0.0)
+		"Historic": return Color(0.7, 0.7, 0.7)
+		"Mythic": return Color(0.5, 0.5, 1.0)
+		"Legendary": return Color(1.0, 0.8, 0.0)
 		_: return Color.WHITE
 
 func _on_buy_pressed(index: int):
@@ -97,7 +90,7 @@ func _on_buy_pressed(index: int):
 	if item == null:
 		return
 	if inventory_node.money < item.price:
-		print("Недостатньо монет!")
+		print("Not enongh cash")
 		return
 	var can_add = false
 	if item is Spirit and inventory_node.spirits.size() < inventory_node.max_spirits:
@@ -105,7 +98,7 @@ func _on_buy_pressed(index: int):
 	elif item is Beer and inventory_node.beers.size() < inventory_node.max_beers:
 		can_add = true
 	if not can_add:
-		print("Немає місця!")
+		print("No slots available")
 		return
 	if inventory_node.spend_money(item.price):
 		inventory_node.add_item(item)
@@ -150,10 +143,3 @@ func _on_start_blind_pressed():
 	if save_system:
 		save_system.save_game()
 	get_tree().change_scene_to_file("res://scenes/main/game_scene.tscn")
-
-# Відкрити UI інвентаря як вікно (додає Inventory.tscn у root)
-func _on_open_inventory_pressed():
-	var inv_scene = load("res://scenes/ui/Inventory.tscn")
-	var inv_instance = inv_scene.instantiate()
-	get_tree().get_root().add_child(inv_instance)
-	inv_instance.set_global_position(Vector2(50, 50))

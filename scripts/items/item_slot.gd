@@ -8,13 +8,12 @@ var item: Resource = null
 @onready var name_label: Label = $VBoxContainer/NameLabel
 
 func _ready():
-	# Під’єднати свій сигнал pressed кнопки до методу _on_pressed
 	connect("pressed", Callable(self, "_on_pressed"))
 
 func set_item(item_ref):
 	item = item_ref
 	if icon_node == null or name_label == null:
-		push_warning("Icon або NameLabel не знайдено!")
+		push_warning("Icon or name not found")
 		return
 
 	if item == null:

@@ -1,11 +1,10 @@
-@icon("res://assets/icons/item_icon.png")
 extends Resource
 class_name Item
 
-@export var id: String = ""         # унікальний ідентифікатор
+@export var id: String = ""         
 @export var name: String = "Item"
 @export var description: String = ""
-@export var rarity: String = "Історична"
+@export var rarity: String = "Historic"
 @export var price: int = 0
-@export var type: String = "дух"    # "дух" або "пиво"
+@export var type: String = "spirit"   
 @export var icon: Texture2D

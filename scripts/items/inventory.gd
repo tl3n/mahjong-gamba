@@ -1,4 +1,3 @@
-# res://scripts/inventory.gd
 extends Node
 class_name Inventory1
 
@@ -14,13 +13,9 @@ var beers: Array[Resource] = []
 var money: int = 0
 
 func _ready() -> void:
-	# ініціалізуємо стартові гроші, якщо треба
 	if money == 0:
 		money = starting_money
 
-#
-# CRUD для предметів
-#
 func add_item(item: Resource) -> bool:
 	if item is Spirit:
 		return add_spirit(item)
@@ -59,7 +54,6 @@ func remove_item(item: Resource) -> void:
 		return
 
 func sell_item(item: Resource) -> int:
-	# повертає отриману суму (0 якщо не продано)
 	if item == null:
 		return 0
 	var sell_price := int(item.price * 0.5)
@@ -83,9 +77,6 @@ func spend_money(amount: int) -> bool:
 		return true
 	return false
 
-#
-# Доступ по індексу (з захистом)
-#
 func get_spirit_at(index: int) -> Spirit:
 	if index < 0 or index >= spirits.size():
 		return null
@@ -96,10 +87,6 @@ func get_beer_at(index: int) -> Beer:
 		return null
 	return beers[index]
 
-#
-# Серіалізація / десеріалізація для SaveSystem
-# (повертає Dictionary, який легко зберегти)
-#
 func to_dict() -> Dictionary:
 	var sarr := []
 	for s in spirits:

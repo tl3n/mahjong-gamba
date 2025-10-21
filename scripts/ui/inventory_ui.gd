@@ -48,14 +48,13 @@ func _create_spirit_slots():
 	for i in range(inventory_node.max_spirits):
 		var s = slot_scene.instantiate()
 		s.custom_minimum_size = Vector2(80, 80)
-		# slot_scene should have 'index' export or var; use set
 		if s.has_method("set_index"):
 			s.set_index(i)
 		else:
 			s.index = i
 		s.connect("pressed_slot", Callable(self, "_on_spirit_slot_pressed"))
 		spirits_grid.add_child(s)
-	spirits_label.text = "Духи (%d/%d)" % [inventory_node.spirits.size(), inventory_node.max_spirits]
+	spirits_label.text = "Spirits (%d/%d)" % [inventory_node.spirits.size(), inventory_node.max_spirits]
 
 func _create_beer_slots():
 	for child in beers_grid.get_children():
@@ -70,7 +69,7 @@ func _create_beer_slots():
 			s.index = i
 		s.connect("pressed_slot", Callable(self, "_on_beer_slot_pressed"))
 		beers_grid.add_child(s)
-	beers_label.text = "Пиво (%d/%d)" % [inventory_node.beers.size(), inventory_node.max_beers]
+	beers_label.text = "Beers (%d/%d)" % [inventory_node.beers.size(), inventory_node.max_beers]
 
 func _on_spirit_slot_pressed(slot_index):
 	var it = inventory_node.get_spirit_at(slot_index)
@@ -89,22 +88,22 @@ func _on_beer_slot_pressed(slot_index):
 func _update_item_details():
 	if selected_item == null:
 		icon_rect.texture = null
-		item_name_label.text = "Порожній слот"
+		item_name_label.text = "Empty Slot"
 		item_desc_label.text = ""
 		return
 	if selected_item.icon:
 		icon_rect.texture = selected_item.icon
 	item_name_label.text = selected_item.name
-	var details = "%s\n\nРідкість: %s\nЦіна покупки: %d монет\nЦіна продажу: %d монет\n\n" % [
+	var details = "%s\n\nRarity: %s\nPurchase Price: %d coins\nSell Price: %d coins\n\n" % [
 		selected_item.description,
 		selected_item.rarity,
 		selected_item.price,
 		int(selected_item.price * 0.5)
 	]
 	if selected_item is Spirit:
-		details += "Тип: Дух (постійний ефект)\nЕфект: %s +%s" % [selected_item.effect_type, str(selected_item.effect_value)]
+		details += "Type: Spirit (Permanent Effect)\nEffect: %s +%s" % [selected_item.effect_type, str(selected_item.effect_value)]
 	elif selected_item is Beer:
-		details += "Тип: Пиво (одноразове)\nЕфект: %s\nТривалість: %d раунд(и)" % [selected_item.round_effect, selected_item.duration]
+		details += "Type: Beer (One-time)\nEffect: %s\nDuration: %d round(s)" % [selected_item.round_effect, selected_item.duration]
 	item_desc_label.text = details
 
 func _on_inventory_changed():
@@ -115,13 +114,13 @@ func _on_money_changed(_new_money):
 
 func _on_sell_button_pressed():
 	if selected_item == null:
-		print("Немає вибраного предмета для продажу")
+		print("No item selected for selling")
 		return
 	var item_name = selected_item.name
 	var price_back = int(selected_item.price * 0.5)
 	inventory_node.remove_item(selected_item)
 	inventory_node.add_money(price_back)
-	print("Продано %s за %d монет" % [item_name, price_back])
+	print("Sold %s for %d coins" % [item_name, price_back])
 	selected_item = null
 	selected_type = ""
 	_refresh_ui()
@@ -130,9 +129,9 @@ func _on_sell_button_pressed():
 func _update_sell_button_state():
 	sell_button.disabled = (selected_item == null)
 	if selected_item != null:
-		sell_button.text = "Продати (%d¥)" % int(selected_item.price * 0.5)
+		sell_button.text = "Sell (%d¥)" % int(selected_item.price * 0.5)
 	else:
-		sell_button.text = "Продати"
+		sell_button.text = "Sell"
 
 func _refresh_ui():
 	var i = 0
@@ -147,8 +146,8 @@ func _refresh_ui():
 		if child.has_method("set_item"):
 			child.call("set_item", item_ref)
 		i += 1
-	spirits_label.text = "Духи (%d/%d)" % [inventory_node.spirits.size(), inventory_node.max_spirits]
-	beers_label.text = "Пиво (%d/%d)" % [inventory_node.beers.size(), inventory_node.max_beers]
+	spirits_label.text = "Spirits (%d/%d)" % [inventory_node.spirits.size(), inventory_node.max_spirits]
+	beers_label.text = "Beers (%d/%d)" % [inventory_node.beers.size(), inventory_node.max_beers]
 	if selected_type == "spirit" and not inventory_node.spirits.has(selected_item):
 		selected_item = null
 	elif selected_type == "beer" and not inventory_node.beers.has(selected_item):
@@ -157,4 +156,4 @@ func _refresh_ui():
 	_update_money_display()
 
 func _update_money_display():
-	money_label.text = "Монети: %d¥" % inventory_node.money
+	money_label.text = "Coins: %d¥" % inventory_node.money

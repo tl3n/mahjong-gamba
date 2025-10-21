@@ -1,4 +1,3 @@
-# res://scripts/save_system.gd
 extends Node
 
 const SAVE_FILE = "user://mahjong_save.dat"
@@ -13,17 +12,16 @@ func save_game():
 	if file:
 		file.store_var(save_data)
 		file.close()
-		print("Гру збережено")
+		print("Game saved")
 		print("Save path:", ProjectSettings.globalize_path(SAVE_FILE))
 		return true
 	else:
-		print("Помилка збереження")
+		print("Saving error")
 		return false
 
-# Завантажити гру
 func load_game() -> bool:
 	if not FileAccess.file_exists(SAVE_FILE):
-		print("Файл збереження не знайдено")
+		print("Savefile not found")
 		return false
 	
 	var file = FileAccess.open(SAVE_FILE, FileAccess.READ)
@@ -34,23 +32,20 @@ func load_game() -> bool:
 		_deserialize_inventory(save_data.get("inventory", {}))
 		_deserialize_game_state(save_data.get("game_state", {}))
 		
-		print("Гру завантажено")
+		print("Save loaded")
 		return true
 	else:
-		print("Помилка завантаження")
+		print("Loading error")
 		return false
 
-# Перевірка чи є збереження
 func has_save() -> bool:
 	return FileAccess.file_exists(SAVE_FILE)
 
-# Видалити збереження
 func delete_save():
 	if FileAccess.file_exists(SAVE_FILE):
 		DirAccess.remove_absolute(SAVE_FILE)
-		print("Збереження видалено")
+		print("Saves deleted")
 
-# Серіалізація інвентаря
 func _serialize_inventory() -> Dictionary:
 	var inv = get_node_or_null("/root/Inventory")
 	if not inv:
@@ -70,7 +65,6 @@ func _serialize_inventory() -> Dictionary:
 		"money": inv.money
 	}
 
-# Серіалізація предмета
 func _serialize_item(item: Item) -> Dictionary:
 	var data = {
 		"id": item.id,
@@ -93,7 +87,6 @@ func _serialize_item(item: Item) -> Dictionary:
 	
 	return data
 
-# Серіалізація стану гри
 func _serialize_game_state() -> Dictionary:
 	var gm = get_node_or_null("/root/GameManager")
 	if not gm:
@@ -108,7 +101,6 @@ func _serialize_game_state() -> Dictionary:
 		"is_game_active": gm.is_game_active
 	}
 
-# Десеріалізація інвентаря
 func _deserialize_inventory(data: Dictionary):
 	var inv = get_node_or_null("/root/Inventory")
 	if not inv:
@@ -117,53 +109,48 @@ func _deserialize_inventory(data: Dictionary):
 	inv.spirits.clear()
 	inv.beers.clear()
 	
-	# Відновлюємо духів
 	for spirit_data in data.get("spirits", []):
 		var spirit = _deserialize_item(spirit_data)
 		if spirit:
 			inv.spirits.append(spirit)
 	
-	# Відновлюємо пиво
 	for beer_data in data.get("beers", []):
 		var beer = _deserialize_item(beer_data)
 		if beer:
 			inv.beers.append(beer)
 	
-	# Відновлюємо гроші
 	inv.money = data.get("money", 10)
 	inv.emit_signal("inventory_changed")
 	inv.emit_signal("money_changed", inv.money)
 
-# Десеріалізація предмета
 func _deserialize_item(data: Dictionary):
-	if data.get("type") == "дух":
+	if data.get("type") == "spirit":
 		var spirit = Spirit.new()
 		spirit.id = data.get("id", "")
 		spirit.name = data.get("name", "")
 		spirit.description = data.get("description", "")
-		spirit.rarity = data.get("rarity", "Історична")
+		spirit.rarity = data.get("rarity", "Historic")
 		spirit.price = data.get("price", 0)
-		spirit.type = "дух"
+		spirit.type = "spirit"
 		spirit.effect_type = data.get("effect_type", "")
 		spirit.effect_value = data.get("effect_value", 0.0)
 		spirit.condition = data.get("condition", "")
 		spirit.permanent = data.get("permanent", true)
 		return spirit
-	elif data.get("type") == "пиво":
+	elif data.get("type") == "beer":
 		var beer = Beer.new()
 		beer.id = data.get("id", "")
 		beer.name = data.get("name", "")
 		beer.description = data.get("description", "")
-		beer.rarity = data.get("rarity", "Історична")
+		beer.rarity = data.get("rarity", "Historic")
 		beer.price = data.get("price", 0)
-		beer.type = "пиво"
+		beer.type = "beer"
 		beer.round_effect = data.get("round_effect", "")
 		beer.duration = data.get("duration", 1)
 		beer.bonus_value = data.get("bonus_value", 0.0)
 		return beer
 	return null
 
-# Десеріалізація стану гри
 func _deserialize_game_state(data: Dictionary):
 	var gm = get_node_or_null("/root/GameManager")
 	if not gm:

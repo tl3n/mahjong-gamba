@@ -1,8 +1,7 @@
-# res://scripts/item_database.gd
 extends Node
 class_name ItemDatabase
 
-# База всіх духів
+# All spirits
 static var spirits_data = [
 	{
 		"id": "spirit_fire",
@@ -86,7 +85,6 @@ static var spirits_data = [
 	}
 ]
 
-# База всього пива
 static var beers_data = [
 	{
 		"id": "beer_extra_draw",
@@ -150,13 +148,12 @@ static var beers_data = [
 	}
 ]
 
-# Створює Spirit об'єкт з даних
 static func create_spirit_from_data(data: Dictionary) -> Spirit:
 	var s = Spirit.new()
 	s.id = data.get("id", "")
 	s.name = data.get("name", "")
 	s.description = data.get("description", "")
-	s.rarity = data.get("rarity", "Історична")
+	s.rarity = data.get("rarity", "Historic")
 	s.price = data.get("price", 0)
 	s.type = "дух"
 	s.effect_type = data.get("effect_type", "")
@@ -165,13 +162,12 @@ static func create_spirit_from_data(data: Dictionary) -> Spirit:
 	s.permanent = true
 	return s
 
-# Створює Beer об'єкт з даних
 static func create_beer_from_data(data: Dictionary) -> Beer:
 	var b = Beer.new()
 	b.id = data.get("id", "")
 	b.name = data.get("name", "")
 	b.description = data.get("description", "")
-	b.rarity = data.get("rarity", "Історична")
+	b.rarity = data.get("rarity", "Historic")
 	b.price = data.get("price", 0)
 	b.type = "пиво"
 	b.round_effect = data.get("round_effect", "")
@@ -179,19 +175,16 @@ static func create_beer_from_data(data: Dictionary) -> Beer:
 	b.bonus_value = data.get("bonus_value", 0.0)
 	return b
 
-# Отримати випадковий дух
 static func get_random_spirit() -> Spirit:
 	var data = spirits_data[randi() % spirits_data.size()]
 	return create_spirit_from_data(data)
 
-# Отримати випадкове пиво
 static func get_random_beer() -> Beer:
 	var data = beers_data[randi() % beers_data.size()]
 	return create_beer_from_data(data)
 
-# Отримати випадковий предмет (дух або пиво)
 static func get_random_item() -> Item:
-	if randf() < 0.6:  # 60% шанс духа, 40% пива
+	if randf() < 0.6:  
 		return get_random_spirit()
 	else:
 		return get_random_beer()
