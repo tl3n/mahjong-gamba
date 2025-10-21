@@ -1,3 +1,4 @@
+# res://scripts/save_system.gd
 extends Node
 
 const SAVE_FILE = "user://mahjong_save.dat"
@@ -5,7 +6,8 @@ const SAVE_FILE = "user://mahjong_save.dat"
 func save_game():
 	var save_data = {
 		"inventory": _serialize_inventory(),
-		"game_state": _serialize_game_state()
+		"game_state": _serialize_game_state(),
+		"shop_state": _serialize_shop_state()
 	}
 	
 	var file = FileAccess.open(SAVE_FILE, FileAccess.WRITE)
@@ -31,6 +33,7 @@ func load_game() -> bool:
 		
 		_deserialize_inventory(save_data.get("inventory", {}))
 		_deserialize_game_state(save_data.get("game_state", {}))
+		_deserialize_shop_state(save_data.get("shop_state", {}))
 		
 		print("Save loaded")
 		return true
@@ -87,20 +90,6 @@ func _serialize_item(item: Item) -> Dictionary:
 	
 	return data
 
-func _serialize_game_state() -> Dictionary:
-	var gm = get_node_or_null("/root/GameManager")
-	if not gm:
-		return {}
-	
-	return {
-		"current_blind": gm.current_blind,
-		"current_round": gm.current_round,
-		"current_score": gm.current_score,
-		"target_score": gm.target_score,
-		"discards_left": gm.discards_left,
-		"is_game_active": gm.is_game_active
-	}
-
 func _deserialize_inventory(data: Dictionary):
 	var inv = get_node_or_null("/root/Inventory")
 	if not inv:
@@ -124,7 +113,9 @@ func _deserialize_inventory(data: Dictionary):
 	inv.emit_signal("money_changed", inv.money)
 
 func _deserialize_item(data: Dictionary):
-	if data.get("type") == "spirit":
+	var item_type = data.get("type", "")
+	
+	if item_type == "spirit" or item_type == "дух":
 		var spirit = Spirit.new()
 		spirit.id = data.get("id", "")
 		spirit.name = data.get("name", "")
@@ -137,7 +128,8 @@ func _deserialize_item(data: Dictionary):
 		spirit.condition = data.get("condition", "")
 		spirit.permanent = data.get("permanent", true)
 		return spirit
-	elif data.get("type") == "beer":
+		
+	elif item_type == "beer" or item_type == "пиво":
 		var beer = Beer.new()
 		beer.id = data.get("id", "")
 		beer.name = data.get("name", "")
@@ -149,7 +141,57 @@ func _deserialize_item(data: Dictionary):
 		beer.duration = data.get("duration", 1)
 		beer.bonus_value = data.get("bonus_value", 0.0)
 		return beer
+		
 	return null
+
+var cached_shop_items: Array = []
+var cached_reroll_cost: int = 3
+
+func save_shop_state(items: Array, reroll_cost: int):
+	cached_shop_items = items.duplicate()
+	cached_reroll_cost = reroll_cost
+	save_game()  
+
+func _serialize_shop_state() -> Dictionary:
+	var items_data = []
+	for item in cached_shop_items:
+		if item:
+			items_data.append(_serialize_item(item))
+	
+	return {
+		"items": items_data,
+		"reroll_cost": cached_reroll_cost
+	}
+
+func _deserialize_shop_state(data: Dictionary):
+	cached_shop_items.clear()
+	
+	for item_data in data.get("items", []):
+		var item = _deserialize_item(item_data)
+		if item:
+			cached_shop_items.append(item)
+	
+	cached_reroll_cost = data.get("reroll_cost", 3)
+
+func load_shop_state() -> Dictionary:
+	return {
+		"items": cached_shop_items.duplicate(),
+		"reroll_cost": cached_reroll_cost
+	}
+
+func _serialize_game_state() -> Dictionary:
+	var gm = get_node_or_null("/root/GameManager")
+	if not gm:
+		return {}
+	
+	return {
+		"current_blind": gm.current_blind,
+		"current_round": gm.current_round,
+		"current_score": gm.current_score,
+		"target_score": gm.target_score,
+		"discards_left": gm.discards_left,
+		"is_game_active": gm.is_game_active
+	}
 
 func _deserialize_game_state(data: Dictionary):
 	var gm = get_node_or_null("/root/GameManager")
