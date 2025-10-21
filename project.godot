@@ -18,5 +18,4 @@ config/icon="res://icon.svg"
 [autoload]
 
 Inventory="*res://scripts/items/inventory.gd"
-GameManager="*res://scripts/game_manager.gd"
 SaveSystem="*res://scripts/save_system.gd"

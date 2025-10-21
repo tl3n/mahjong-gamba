@@ -11,45 +11,30 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_lq7f0")
 
-[node name="Window" type="Panel" parent="."]
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
 layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
+offset_right = 129.0
+offset_bottom = 101.0
 
-[node name="VBoxContainer" type="VBoxContainer" parent="Window"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 40.0
-
-[node name="MoneyLabel" type="Label" parent="Window/VBoxContainer"]
+[node name="ShopSection" type="VBoxContainer" parent="VBoxContainer"]
 layout_mode = 2
 
-[node name="ShopSection" type="VBoxContainer" parent="Window/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Window/VBoxContainer/ShopSection"]
+[node name="Label" type="Label" parent="VBoxContainer/ShopSection"]
 layout_mode = 2
 text = "Shop"
 horizontal_alignment = 1
 
-[node name="ShopSlotsContainer" type="HBoxContainer" parent="Window/VBoxContainer/ShopSection"]
+[node name="ShopSlotsContainer" type="HBoxContainer" parent="VBoxContainer/ShopSection"]
 layout_mode = 2
 
-[node name="RerollButton" type="Button" parent="Window/VBoxContainer/ShopSection"]
+[node name="RerollButton" type="Button" parent="VBoxContainer/ShopSection"]
 layout_mode = 2
 text = "Reroll
 "
 
-[node name="PlayerItemsSection" type="VBoxContainer" parent="Window/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="Window/VBoxContainer/PlayerItemsSection"]
-layout_mode = 2
-text = "Your items"
-
-[node name="PlayerItemsContainer" type="HBoxContainer" parent="Window/VBoxContainer/PlayerItemsSection"]
-layout_mode = 2
-
-[node name="StartBlindButton" type="Button" parent="Window/VBoxContainer"]
+[node name="StartBlindButton" type="Button" parent="VBoxContainer"]
 layout_mode = 2
 text = "Start New Blind"
+
+[node name="InventoryPanel" type="Control" parent="VBoxContainer"]
+layout_mode = 2

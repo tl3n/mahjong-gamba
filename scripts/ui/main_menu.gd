@@ -60,12 +60,6 @@ func _initialize_new_game():
 func _on_quit_button_pressed() -> void:
 	get_tree().quit()
 
-func _on_inventory_pressed() -> void:
-	var inv_scene = load("res://scenes/ui/inventory.tscn")
-	var inv_instance = inv_scene.instantiate()
-	get_tree().get_root().add_child(inv_instance)
-	inv_instance.set_global_position(Vector2(50, 50))
-
 func _on_shop_pressed() -> void:
 	var shop_scene = load("res://scenes/main/shop_scene.tscn")
 	var shop_instance = shop_scene.instantiate()
