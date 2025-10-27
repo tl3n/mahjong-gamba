@@ -27,7 +27,6 @@ func _ready():
 	reroll_button.connect("pressed", Callable(self, "_on_reroll_pressed"))
 	start_blind_button.connect("pressed", Callable(self, "_on_start_blind_pressed"))
 	
-	# Завантажуємо інвентар UI
 	var inv_scene = load("res://scenes/ui/Inventory.tscn")
 	var inv_instance = inv_scene.instantiate()
 	inventory_panel.add_child(inv_instance)
@@ -36,41 +35,63 @@ func _ready():
 	if close_button:
 		close_button.visible = false
 	
-	# Ховаємо панель деталей спочатку
 	if item_details_panel:
 		item_details_panel.visible = false
 	
-	# Завантажуємо стан магазину або генеруємо новий
 	_load_or_generate_shop()
+	
+	if shop_items.size() == 0:
+		push_warning("shop_items is empty after loading! Generating new items...")
+		_generate_shop_items()
+	
 	_create_shop_slots()
 	_update_reroll_button()
 
 func _load_or_generate_shop():
 	var save_system = get_node_or_null("/root/SaveSystem")
+	
 	if save_system and save_system.has_save():
 		var shop_data = save_system.load_shop_state()
-		if shop_data.size() > 0:
-			shop_items = shop_data.get("items", [])
+		
+		if shop_data.has("items") and shop_data["items"].size() > 0:
+			shop_items = shop_data["items"]
 			reroll_cost = shop_data.get("reroll_cost", 3)
-			print("Shop loaded from save")
+			print("Shop loaded from save: %d items" % shop_items.size())
 			return
 	
+	print("Generating new shop items")
 	_generate_shop_items()
 
 func _generate_shop_items():
 	shop_items.clear()
 	for i in range(3):
-		shop_items.append(ItemDatabase.get_random_item())
+		var new_item = ItemDatabase.get_random_item()
+		if new_item:
+			shop_items.append(new_item)
+		else:
+			push_error("Failed to generate item at index %d" % i)
+	
+	print("Generated %d shop items" % shop_items.size())
 
 func _create_shop_slots():
 	for child in shop_slots_container.get_children():
 		child.queue_free()
 	
-	for i in range(3):
+	if shop_items.size() == 0:
+		push_error("Cannot create shop slots: shop_items is empty!")
+		return
+	
+	for i in range(shop_items.size()):
 		var slot = _create_shop_slot(i)
 		shop_slots_container.add_child(slot)
 
 func _create_shop_slot(index: int) -> Control:
+	if index >= shop_items.size() or shop_items[index] == null:
+		push_error("Invalid shop item at index %d" % index)
+		return Control.new() 
+	
+	var item = shop_items[index]
+	
 	var slot_container = VBoxContainer.new()
 	slot_container.custom_minimum_size = Vector2(180, 250)
 	
@@ -81,40 +102,39 @@ func _create_shop_slot(index: int) -> Control:
 	var button_content = VBoxContainer.new()
 	select_button.add_child(button_content)
 	
-	# Іконка
 	var icon = TextureRect.new()
 	icon.custom_minimum_size = Vector2(120, 120)
 	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	if shop_items[index] and shop_items[index].icon:
-		icon.texture = shop_items[index].icon
+	if item.icon:
+		icon.texture = item.icon
 	button_content.add_child(icon)
 	
-	# Назва
 	var name_label = Label.new()
-	name_label.text = shop_items[index].name
+	name_label.text = item.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	button_content.add_child(name_label)
 	
-	# Рідкість
 	var rarity_label = Label.new()
-	rarity_label.text = shop_items[index].rarity
+	rarity_label.text = item.rarity
 	rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	rarity_label.add_theme_color_override("font_color", _get_rarity_color(shop_items[index].rarity))
+	rarity_label.add_theme_color_override("font_color", _get_rarity_color(item.rarity))
 	button_content.add_child(rarity_label)
 	
 	slot_container.add_child(select_button)
 	
-	# Кнопка купівлі
 	var buy_button = Button.new()
-	buy_button.text = "Buy (%d¥)" % shop_items[index].price
+	buy_button.text = "Buy (%d¥)" % item.price
 	buy_button.connect("pressed", Callable(self, "_on_buy_pressed").bind(index))
 	slot_container.add_child(buy_button)
 	
 	return slot_container
 
 func _on_shop_item_selected(index: int):
+	if index >= shop_items.size() or shop_items[index] == null:
+		return
+	
 	selected_shop_index = index
 	selected_shop_item = shop_items[index]
 	_show_item_details(selected_shop_item)
@@ -154,19 +174,20 @@ func _show_item_details(item):
 
 func _get_rarity_color(rarity: String) -> Color:
 	match rarity:
-		"Historic":
+		"Historic", "Історична":
 			return Color(0.7, 0.7, 0.7)
-		"Mythic":
+		"Mythic", "Міфічна":
 			return Color(0.5, 0.5, 1.0)
-		"Legendary":
+		"Legendary", "Легендарна":
 			return Color(1.0, 0.8, 0.0)
 		_:
 			return Color.WHITE
 
 func _on_buy_pressed(index: int):
-	var item = shop_items[index]
-	if item == null:
+	if index >= shop_items.size() or shop_items[index] == null:
 		return
+	
+	var item = shop_items[index]
 	
 	if inventory_node.money < item.price:
 		print("Not enough cash")
@@ -196,7 +217,7 @@ func _on_buy_pressed(index: int):
 
 func _on_reroll_pressed():
 	if inventory_node.spend_money(reroll_cost):
-		print("🔄 Reroll shop")
+		print("Reroll shop")
 		reroll_cost += 1
 		_generate_shop_items()
 		_refresh_shop_display()
@@ -208,7 +229,7 @@ func _on_reroll_pressed():
 		selected_shop_item = null
 		selected_shop_index = -1
 	else:
-		print("❌ Not enough money for reroll")
+		print("Not enough money for reroll")
 
 func _refresh_shop_display():
 	_create_shop_slots()
@@ -216,10 +237,14 @@ func _refresh_shop_display():
 func _update_reroll_button():
 	reroll_button.text = "Reroll (%d¥)" % reroll_cost
 
+func _on_money_changed(_new_money):
+	pass
+
 func _save_shop_state():
 	var save_system = get_node_or_null("/root/SaveSystem")
 	if save_system:
 		save_system.save_shop_state(shop_items, reroll_cost)
+		print("💾 Shop state saved")
 
 func _on_start_blind_pressed():
 	_save_shop_state()

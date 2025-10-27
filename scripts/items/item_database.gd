@@ -1,6 +1,15 @@
 extends Node
 class_name ItemDatabase
 
+const RARITY_WEIGHTS = {
+	"Історична": 50.0,    # 50% chance
+	"Historic": 50.0,
+	"Міфічна": 30.0,      # 30% chance
+	"Mythic": 30.0,
+	"Легендарна": 20.0,   # 20% chance
+	"Legendary": 20.0
+}
+
 # All spirits
 static var spirits_data = [
 	{
@@ -148,6 +157,35 @@ static var beers_data = [
 	}
 ]
 
+
+static func get_random_spirit() -> Spirit:
+	var selected_data = _get_weighted_random_item(spirits_data)
+	return create_spirit_from_data(selected_data)
+
+static func get_random_beer() -> Beer:
+	var selected_data = _get_weighted_random_item(beers_data)
+	return create_beer_from_data(selected_data)
+
+static func _get_weighted_random_item(items_array: Array) -> Dictionary:
+	var total_weight = 0.0
+	var weights = []
+	
+	for item_data in items_array:
+		var rarity = item_data.get("rarity", "Historic")
+		var weight = RARITY_WEIGHTS.get(rarity, 50.0)
+		weights.append(weight)
+		total_weight += weight
+	
+	var random_value = randf() * total_weight
+	
+	var cumulative_weight = 0.0
+	for i in range(items_array.size()):
+		cumulative_weight += weights[i]
+		if random_value <= cumulative_weight:
+			return items_array[i]
+	
+	return items_array[0]
+
 static func create_spirit_from_data(data: Dictionary) -> Spirit:
 	var s = Spirit.new()
 	s.id = data.get("id", "")
@@ -155,7 +193,7 @@ static func create_spirit_from_data(data: Dictionary) -> Spirit:
 	s.description = data.get("description", "")
 	s.rarity = data.get("rarity", "Historic")
 	s.price = data.get("price", 0)
-	s.type = "дух"
+	s.type = "spirit"
 	s.effect_type = data.get("effect_type", "")
 	s.effect_value = data.get("effect_value", 0.0)
 	s.condition = data.get("condition", "")
@@ -169,22 +207,14 @@ static func create_beer_from_data(data: Dictionary) -> Beer:
 	b.description = data.get("description", "")
 	b.rarity = data.get("rarity", "Historic")
 	b.price = data.get("price", 0)
-	b.type = "пиво"
+	b.type = "beer"
 	b.round_effect = data.get("round_effect", "")
 	b.duration = data.get("duration", 1)
 	b.bonus_value = data.get("bonus_value", 0.0)
 	return b
 
-static func get_random_spirit() -> Spirit:
-	var data = spirits_data[randi() % spirits_data.size()]
-	return create_spirit_from_data(data)
-
-static func get_random_beer() -> Beer:
-	var data = beers_data[randi() % beers_data.size()]
-	return create_beer_from_data(data)
-
 static func get_random_item() -> Item:
-	if randf() < 0.6:  
+	if randf() < 0.6:  # 60% chance for spirit
 		return get_random_spirit()
-	else:
+	else:  # 40% chance for beer
 		return get_random_beer()

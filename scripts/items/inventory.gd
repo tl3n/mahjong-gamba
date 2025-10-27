@@ -61,9 +61,6 @@ func sell_item(item: Resource) -> int:
 	add_money(sell_price)
 	return sell_price
 
-#
-# Гроші
-#
 func add_money(amount: int) -> void:
 	money += amount
 	emit_signal("money_changed", money)
