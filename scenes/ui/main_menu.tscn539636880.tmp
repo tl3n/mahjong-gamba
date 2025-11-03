@@ -1,15 +1,9 @@
-[gd_scene load_steps=27 format=3 uid="uid://dui1djxefnu5a"]
+[gd_scene load_steps=24 format=3 uid="uid://dui1djxefnu5a"]
 
 [ext_resource type="Script" uid="uid://cct6f5jptp40k" path="res://scripts/ui/main_menu.gd" id="1_06t4h"]
 [ext_resource type="Texture2D" uid="uid://dgkl17bpjklpe" path="res://assets/icons/quit_button_sprite.png" id="2_fe2o3"]
 [ext_resource type="Texture2D" uid="uid://d2yro7mr8fbew" path="res://assets/icons/new_game_button_sprite.png" id="2_m1kxf"]
-[ext_resource type="Texture2D" uid="uid://c66nn37jq33f7" path="res://assets/icons/main_menu.background.jpg" id="2_uhagc"]
-[ext_resource type="Texture2D" uid="uid://doillmrss6nj6" path="res://assets/icons/title_label_sprite.png" id="2_x2yvf"]
 [ext_resource type="Texture2D" uid="uid://bwibpeao53rhk" path="res://assets/icons/continue_button_sprite.png" id="3_x2yvf"]
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_btxxm"]
-atlas = ExtResource("2_x2yvf")
-region = Rect2(20, 100, 940, 230)
 
 [sub_resource type="AtlasTexture" id="AtlasTexture_uhagc"]
 atlas = ExtResource("2_m1kxf")
@@ -88,22 +82,36 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_06t4h")
 
-[node name="BackgroundImage" type="Sprite2D" parent="."]
-position = Vector2(572, 349)
-scale = Vector2(1.0715609, 0.96834147)
-texture = ExtResource("2_uhagc")
+[node name="VBoxContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -20.0
+offset_top = -20.0
+offset_right = 20.0
+offset_bottom = 20.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Title" type="Sprite2D" parent="."]
-position = Vector2(578, 141)
-scale = Vector2(0.67553705, 0.67553705)
-texture = SubResource("AtlasTexture_btxxm")
+[node name="Label" type="Label" parent="."]
+layout_mode = 0
+offset_left = 417.0
+offset_top = 213.0
+offset_right = 735.0
+offset_bottom = 263.0
+theme_override_font_sizes/font_size = 36
+text = "MAHJONG GAMBA"
+horizontal_alignment = 1
 
 [node name="NewGameButton" type="TextureButton" parent="."]
 layout_mode = 0
 offset_left = 458.0
-offset_top = 363.0
+offset_top = 369.0
 offset_right = 998.0
-offset_bottom = 523.0
+offset_bottom = 529.0
 scale = Vector2(0.45349842, 0.45349842)
 texture_normal = SubResource("AtlasTexture_uhagc")
 texture_pressed = SubResource("AtlasTexture_wb0q5")
