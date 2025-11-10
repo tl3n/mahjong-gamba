@@ -16,8 +16,17 @@ var is_game_active: bool = false
 var base_discards: int = 5
 var rounds_per_blind: int = 3
 
+var last_round_discards: int = 0
+var last_round_plays_left: int = 0
+
+
 func _ready():
 	print("GameManager initialized")
+
+func set_final_stats(final_discards: int, final_plays_left: int):
+	print("   Saving final stats: %d discards, %d plays left" % [final_discards, final_plays_left])
+	last_round_discards = final_discards
+	last_round_plays_left = final_plays_left
 
 func reset_game():
 	print("\n=== RESETTING GAME ===")
@@ -70,6 +79,38 @@ func _calculate_total_discards() -> int:
 	
 	return total
 
+# Bonus system for cash
+func _calculate_round_bonus():
+	var inventory = get_node_or_null("/root/Inventory")
+	if inventory == null:
+		print("Cannot calculate bonus: Inventory not found")
+		return
+		
+	var total_bonus_money = 0
+	
+	# Bonus for unused rounds
+	var unused_rounds = last_round_plays_left 
+	if unused_rounds > 0:
+		var round_bonus = unused_rounds * 1 # TODO: balance this out
+		total_bonus_money += round_bonus
+		print("  Unused plays bonus: +%d money" % round_bonus)
+
+	# Bonus for unused discards
+	var unused_discards = last_round_discards
+	if unused_discards > 0:
+		var discard_bonus = unused_discards * 1 # TODO: balance this out
+		total_bonus_money += discard_bonus
+		print("  Unused discards bonus: +%d money" % discard_bonus)
+		
+	# Pay for completing a blind
+	var base_blind_income = min(current_blind, 5)
+	total_bonus_money += base_blind_income
+	print("  Base blind income: +%d money" % base_blind_income)
+	
+	if total_bonus_money > 0:
+		inventory.add_money(total_bonus_money)
+		print("  Total round bonus: +%d money" % total_bonus_money)
+
 func add_score(points: int):
 	current_score += points
 	print("  Score: +%d → %d / %d" % [points, current_score, target_score])
@@ -81,7 +122,7 @@ func add_score(points: int):
 func end_round():
 	print("\n=== ROUND %d ENDED ===" % current_round)
 	
-	_apply_round_end_bonuses()
+	_calculate_round_bonus()
 	
 	current_round += 1
 	
@@ -89,21 +130,6 @@ func end_round():
 		_on_rounds_depleted()
 	else:
 		start_round()
-
-func _apply_round_end_bonuses():
-	var inventory = get_node_or_null("/root/Inventory")
-	if not inventory:
-		return
-	
-	var total_bonus_money = 0
-	
-	for spirit in inventory.spirits:
-		if spirit.effect_type == "money_bonus":
-			total_bonus_money += int(spirit.effect_value)
-	
-	if total_bonus_money > 0:
-		inventory.add_money(total_bonus_money)
-		print("  Round bonus: +%d money" % total_bonus_money)
 
 func _on_blind_completed():
 	print("\n=== BLIND %d COMPLETED ===" % current_blind)
@@ -127,6 +153,8 @@ func _on_rounds_depleted():
 
 func _go_to_shop():
 	print("Going to shop")
+	
+	_calculate_round_bonus()
 	
 	current_blind += 1
 	

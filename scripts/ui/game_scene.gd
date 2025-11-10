@@ -273,9 +273,8 @@ func _end_round_success():
 	print("=== BLIND COMPLETED ===")
 	
 	if game_manager:
+		game_manager.set_final_stats(discards_left, plays_left)
 		game_manager._on_blind_completed()
-	
-	get_tree().change_scene_to_file("res://scenes/main/shop_scene.tscn")
 
 func _end_round_failure():
 	print("=== GAME OVER ===")
