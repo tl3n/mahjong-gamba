@@ -39,7 +39,7 @@ func _ready():
 	_deal_initial_hand()
 	_update_ui()
 	
-	print("\n🎮 === GAME SCENE READY ===")
+	print("\n=== GAME SCENE READY ===")
 	print("   Hand size: %d" % hand.size())
 	print("   Discards left: %d" % discards_left)
 	print("   Plays left: %d" % plays_left)
@@ -229,26 +229,17 @@ func _on_play_hand_pressed():
 		if game_manager:
 			game_manager.add_score(final_score)
 			
-			if current_score >= game_manager.target_score:
-				print("TARGET REACHED!!1!")
-				_end_round_success()
-				return
-	
-	if game_manager:
-		discards_left = game_manager.base_discards
-	else:
-		discards_left = 5 # Запасний варіант
+	if current_score >= game_manager.target_score || plays_left <= 0:
+		print(" ENDING BLIND ")
+		_check_final_score()
+		return
+		
+	discards_left = game_manager.base_discards
 	print("   Resetting discards to %d" % discards_left)
-	
 	_deal_initial_hand()
 	_update_ui()
 
-	if plays_left <= 0:
-		print("   No more plays left. Checking final score...")
-		_check_final_score()
-
 func _check_final_score():
-	print("\n=== ALL PLAYS USED ===")
 	print("   Final score: %d" % current_score)
 	
 	if game_manager:
@@ -257,20 +248,8 @@ func _check_final_score():
 		else:
 			_end_round_failure() 
 
-func _end_round():
-	print("\n=== ROUND ENDED ===")
-	print("   Discards used: all")
-	print("   Final score: %d" % current_score)
-	
-	if game_manager:
-		if current_score >= game_manager.target_score:
-			_end_round_success()
-		else:
-			if current_score < game_manager.target_score:
-				_end_round_failure()
-
 func _end_round_success():
-	print("=== BLIND COMPLETED ===")
+	print("=== BLIND %d COMPLETED ===" % game_manager.current_blind)
 	
 	if game_manager:
 		game_manager.set_final_stats(discards_left, plays_left)

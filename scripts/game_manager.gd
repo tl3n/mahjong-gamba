@@ -115,9 +115,6 @@ func add_score(points: int):
 	current_score += points
 	print("  Score: +%d → %d / %d" % [points, current_score, target_score])
 	emit_signal("score_changed", current_score)
-	
-	if current_score >= target_score:
-		_on_blind_completed()
 
 func end_round():
 	print("\n=== ROUND %d ENDED ===" % current_round)
@@ -132,7 +129,6 @@ func end_round():
 		start_round()
 
 func _on_blind_completed():
-	print("\n=== BLIND %d COMPLETED ===" % current_blind)
 	print("   Final score: %d / %d" % [current_score, target_score])
 	
 	is_game_active = false
