@@ -1,8 +1,6 @@
 extends Node
 
 signal score_changed(new_score: int)
-signal round_changed(new_round: int)
-signal blind_changed(new_blind: int)
 signal game_over()
 signal blind_completed()
 
@@ -27,45 +25,6 @@ func set_final_stats(final_discards: int, final_plays_left: int):
 	print("   Saving final stats: %d discards, %d plays left" % [final_discards, final_plays_left])
 	last_round_discards = final_discards
 	last_round_plays_left = final_plays_left
-
-func reset_game():
-	print("\n=== RESETTING GAME ===")
-	
-	current_blind = 1
-	current_round = 1
-	current_score = 0
-	target_score = 600
-	discards_left = base_discards
-	is_game_active = false
-	
-	print("Game state reset:")
-	print("   Blind: %d" % current_blind)
-	print("   Round: %d" % current_round)
-	print("   Score: %d / %d" % [current_score, target_score])
-	print("   Discards: %d" % discards_left)
-
-func start_blind():
-	print("\n=== STARTING BLIND %d ===" % current_blind)
-	
-	current_round = 1
-	current_score = 0
-	is_game_active = true
-	
-	target_score = 600 + (current_blind - 1) * 200
-	
-	print("Target score: %d" % target_score)
-	
-	emit_signal("blind_changed", current_blind)
-	start_round()
-
-func start_round():
-	print("\n=== STARTING ROUND %d/%d ===" % [current_round, rounds_per_blind])
-	
-	discards_left = _calculate_total_discards()
-	
-	print("Discards available: %d" % discards_left)
-	
-	emit_signal("round_changed", current_round)
 
 func _calculate_total_discards() -> int:
 	var total = base_discards
@@ -104,29 +63,16 @@ func _calculate_round_bonus():
 		
 	# Pay for completing a blind
 	var base_blind_income = min(current_blind, 5)
-	total_bonus_money += base_blind_income
+	total_bonus_money += base_blind_income # TODO: balance this out
 	print("  Base blind income: +%d money" % base_blind_income)
 	
-	if total_bonus_money > 0:
-		inventory.add_money(total_bonus_money)
-		print("  Total round bonus: +%d money" % total_bonus_money)
+	inventory.add_money(total_bonus_money)
+	print("  Total round bonus: +%d money" % total_bonus_money)
 
 func add_score(points: int):
 	current_score += points
 	print("  Score: +%d → %d / %d" % [points, current_score, target_score])
 	emit_signal("score_changed", current_score)
-
-func end_round():
-	print("\n=== ROUND %d ENDED ===" % current_round)
-	
-	_calculate_round_bonus()
-	
-	current_round += 1
-	
-	if current_round > rounds_per_blind:
-		_on_rounds_depleted()
-	else:
-		start_round()
 
 func _on_blind_completed():
 	print("   Final score: %d / %d" % [current_score, target_score])
@@ -154,14 +100,12 @@ func _go_to_shop():
 	
 	current_blind += 1
 	
+	target_score += 200 #TODO: balance this thing
+	print("   New target score: %d" % target_score)
+	
 	var save_system = get_node_or_null("/root/SaveSystem")
 	if save_system:
 		save_system.save_game()
 	
 	get_tree().change_scene_to_file("res://scenes/main/shop_scene.tscn")
 	
-
-func get_progress_percentage() -> float:
-	if target_score <= 0:
-		return 0.0
-	return (float(current_score) / float(target_score)) * 100.0

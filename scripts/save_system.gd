@@ -76,7 +76,7 @@ func delete_save():
 func _serialize_inventory() -> Dictionary:
 	var inv = get_node_or_null("/root/Inventory")
 	if not inv:
-		print("⚠️ Inventory node not found during serialization!")
+		print(" Inventory node not found during serialization!")
 		return {}
 	
 	var spirits_data = []
@@ -177,7 +177,7 @@ func _deserialize_item(data: Dictionary):
 		spirit.description = data.get("description", "")
 		spirit.rarity = data.get("rarity", "Historic")
 		spirit.price = data.get("price", 0)
-		spirit.type = "spirit"  # ВАЖЛИВО: встановлюємо правильний тип
+		spirit.type = "spirit"  
 		spirit.effect_type = data.get("effect_type", "")
 		spirit.effect_value = data.get("effect_value", 0.0)
 		spirit.condition = data.get("condition", "")
@@ -192,17 +192,17 @@ func _deserialize_item(data: Dictionary):
 		beer.description = data.get("description", "")
 		beer.rarity = data.get("rarity", "Historic")
 		beer.price = data.get("price", 0)
-		beer.type = "beer"  # ВАЖЛИВО: встановлюємо правильний тип
+		beer.type = "beer"  
 		beer.round_effect = data.get("round_effect", "")
 		beer.duration = data.get("duration", 1)
 		beer.bonus_value = data.get("bonus_value", 0.0)
 		return beer
 	
-	print("⚠️ Unknown item type: '%s' for item: %s" % [item_type, data.get("name", "UNNAMED")])
+	print(" Unknown item type: '%s' for item: %s" % [item_type, data.get("name", "UNNAMED")])
 	return null
 
 func save_shop_state(items: Array, reroll_cost: int):
-	print("\n🛒 Saving shop state...")
+	print("\n Saving shop state...")
 	cached_shop_items = items.duplicate()
 	cached_reroll_cost = reroll_cost
 	print("  Items cached: %d" % cached_shop_items.size())
@@ -221,7 +221,7 @@ func _serialize_shop_state() -> Dictionary:
 	}
 
 func _deserialize_shop_state(data: Dictionary):
-	print("  🛒 Restoring shop state...")
+	print("  Restoring shop state...")
 	cached_shop_items.clear()
 	
 	for item_data in data.get("items", []):
@@ -244,7 +244,6 @@ func _serialize_game_state() -> Dictionary:
 	if not gm:
 		return {}
 	
-	# Just some placeholders for the better example
 	return {
 		"current_blind": gm.current_blind,
 		"current_round": gm.current_round,
@@ -259,7 +258,6 @@ func _deserialize_game_state(data: Dictionary):
 	if not gm:
 		return
 	
-	# Just some placeholders for the better example
 	gm.current_blind = data.get("current_blind", 0)
 	gm.current_round = data.get("current_round", 0)
 	gm.current_score = data.get("current_score", 0)

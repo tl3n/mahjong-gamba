@@ -1,7 +1,6 @@
 extends Resource
 class_name Tile
 
-# Масть тайла 
 enum Suit {
 	BAMBOO = 1,   
 	DOTS = 2,    

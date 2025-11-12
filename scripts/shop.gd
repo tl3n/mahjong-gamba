@@ -244,7 +244,7 @@ func _save_shop_state():
 	var save_system = get_node_or_null("/root/SaveSystem")
 	if save_system:
 		save_system.save_shop_state(shop_items, reroll_cost)
-		print("💾 Shop state saved")
+		print("Shop state saved")
 
 func _on_start_blind_pressed():
 	_save_shop_state()

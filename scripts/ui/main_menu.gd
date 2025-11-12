@@ -38,11 +38,11 @@ func _set_button_visual_state(button: TextureButton, is_disabled: bool):
 func _on_continue_button_pressed():
 	var save_system = get_node_or_null("/root/SaveSystem")
 	if not save_system:
-		print("SaveSystem not found!")
+		print("SaveSystem not found")
 		return
 	
 	if not save_system.has_save():
-		print("No save file to continue!")
+		print("No save file to continue")
 		return
 	
 	print("\n=== CONTINUING GAME ===")
