@@ -20,7 +20,6 @@ var current_score: int = 0
 var is_drawing_phase: bool = true
 var just_drawn_index: int = -1
 
-
 func _ready():
 	_check_ui_elements()
 	
@@ -244,24 +243,21 @@ func _check_final_score():
 	
 	if game_manager:
 		if current_score >= game_manager.target_score:
-			_end_round_success()
+			_end_blind_success()
 		else:
-			_end_round_failure() 
+			_end_blind_failure() 
 
-func _end_round_success():
+func _end_blind_success():
 	print("=== BLIND %d COMPLETED ===" % game_manager.current_blind)
-	
 	if game_manager:
 		game_manager.set_final_stats(discards_left, plays_left)
 		game_manager._on_blind_completed()
 
-func _end_round_failure():
+func _end_blind_failure():
 	print("=== GAME OVER ===")
 	
 	if game_manager:
-		game_manager.emit_signal("game_over")
-	
-	get_tree().change_scene_to_file("res://scenes/main/main_menu.tscn")
+		game_manager._on_blind_failed()
 
 func _update_ui():
 	if discards_label:

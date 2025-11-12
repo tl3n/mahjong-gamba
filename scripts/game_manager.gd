@@ -1,7 +1,7 @@
 extends Node
 
 signal score_changed(new_score: int)
-signal game_over()
+signal blind_failed()
 signal blind_completed()
 
 var current_blind: int = 1
@@ -82,16 +82,10 @@ func _on_blind_completed():
 	
 	_go_to_shop()
 
-func _on_rounds_depleted():
-	print("\n=== ROUNDS DEPLETED ===")
-	print("   Score: %d / %d" % [current_score, target_score])
-	
-	if current_score >= target_score:
-		_on_blind_completed()
-	else:
-		print("   Failed to reach target")
-		is_game_active = false
-		emit_signal("game_over")
+func _on_blind_failed():
+	print("Blind failed - deleting save")
+	emit_signal("blind_failed")
+	_go_to_main_menu()
 
 func _go_to_shop():
 	print("Going to shop")
@@ -108,4 +102,13 @@ func _go_to_shop():
 		save_system.save_game()
 	
 	get_tree().change_scene_to_file("res://scenes/main/shop_scene.tscn")
+	
+func _go_to_main_menu():
+	print("Going to main menu after an embarassing failure")
+	
+	var save_system = get_node_or_null("/root/SaveSystem")
+	if save_system:
+		save_system.delete_save()
+	
+	get_tree().change_scene_to_file("res://scenes/main/main_menu.tscn")
 	
