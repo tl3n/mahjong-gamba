@@ -120,7 +120,7 @@ func _serialize_item(item: Item) -> Dictionary:
 			data["type"] = "spirit"
 	
 	elif item is Beer:
-		data["round_effect"] = item.round_effect
+		data["blind_effect"] = item.blind_effect
 		data["duration"] = item.duration
 		data["bonus_value"] = item.bonus_value
 		

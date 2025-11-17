@@ -123,6 +123,7 @@ static func calculate_score(hand: Array[Tile], combo: Dictionary) -> int:
 static func apply_spirit_bonuses(base_score: int, combo: Dictionary, hand: Array[Tile]) -> int:
 	var final_score = base_score
 	var multipliers: Array[float] = []
+	var flat_bonuses: int = 0
 	
 	var inventory = Inventory
 	if not inventory:
@@ -133,20 +134,51 @@ static func apply_spirit_bonuses(base_score: int, combo: Dictionary, hand: Array
 	for spirit in inventory.spirits:
 		match spirit.effect_type:
 			
+			"flat_bonus":
+				var bonus = int(spirit.effect_value)
+				flat_bonuses += bonus
+				print("   + %s: +%d очок" % [spirit.name, bonus])
+			
 			"suit_bonus":
 				var bonus = _calculate_suit_bonus(hand, spirit)
 				if bonus > 0:
-					final_score += bonus
-					print("   + %s: +%d" % [spirit.name, bonus])
+					flat_bonuses += bonus
+					print("   + %s: +%d очок (масть)" % [spirit.name, bonus])
 			
-			"combo_bonus":
+			"tile_bonus":
+				var bonus = hand.size() * int(spirit.effect_value)
+				flat_bonuses += bonus
+				print("   + %s: +%d очок (%d×%d)" % [spirit.name, bonus, hand.size(), int(spirit.effect_value)])
+			
+			"combo_flat_bonus":
 				if _check_combo_condition(combo, spirit.condition):
-					final_score += int(spirit.effect_value)
-					print("   + %s: +%d" % [spirit.name, int(spirit.effect_value)])
+					var bonus = int(spirit.effect_value)
+					flat_bonuses += bonus
+					print("   + %s: +%d очок (комбо)" % [spirit.name, bonus])
+			
+			"rank_bonus":
+				var bonus = _calculate_rank_bonus(hand, spirit)
+				if bonus > 0:
+					flat_bonuses += bonus
+					print("   + %s: +%d очок (ранг)" % [spirit.name, bonus])
 			
 			"global_multiplier":
 				multipliers.append(spirit.effect_value)
 				print("   × %s: ×%.1f" % [spirit.name, spirit.effect_value])
+			
+			"combo_multiplier":
+				if _check_combo_condition(combo, spirit.condition):
+					multipliers.append(spirit.effect_value)
+					print("   × %s: ×%.2f (комбо)" % [spirit.name, spirit.effect_value])
+			
+			"suit_multiplier":
+				if _has_suit_tiles(hand, spirit.condition):
+					multipliers.append(spirit.effect_value)
+					print("   × %s: ×%.2f (масть)" % [spirit.name, spirit.effect_value])
+	
+	final_score += flat_bonuses
+	if flat_bonuses > 0:
+		print("   After flat bonuses: %d" % final_score)
 	
 	for mult in multipliers:
 		final_score = int(final_score * mult)
@@ -164,15 +196,48 @@ static func _calculate_suit_bonus(hand: Array[Tile], spirit: Spirit) -> int:
 	
 	return suit_tiles * int(spirit.effect_value)
 
+static func _calculate_rank_bonus(hand: Array[Tile], spirit: Spirit) -> int:
+	var target_rank = _parse_rank_from_condition(spirit.condition)
+	if target_rank == -1:
+		return 0
+	
+	var rank_tiles = 0
+	for tile in hand:
+		if tile and tile.rank == target_rank:
+			rank_tiles += 1
+	
+	return rank_tiles * int(spirit.effect_value)
+
+static func _parse_rank_from_condition(condition: String) -> int:
+	if condition.contains("rank="):
+		var parts = condition.split("=")
+		if parts.size() >= 2:
+			return int(parts[1])
+	return -1
+
+static func _has_suit_tiles(hand: Array[Tile], condition: String) -> bool:
+	var target_suit = _parse_suit_from_condition(condition)
+	if target_suit == Tile.Suit.NONE:
+		return false
+	
+	for tile in hand:
+		if tile and tile.suit == target_suit:
+			return true
+	
+	return false
+
 static func _parse_suit_from_condition(condition: String) -> Tile.Suit:
-	if condition.contains("bamboo"):
+	var lower_cond = condition.to_lower()
+	
+	if lower_cond.contains("bamboo") or lower_cond.contains("бамбук"):
 		return Tile.Suit.BAMBOO
-	elif condition.contains("dots"):
+	elif lower_cond.contains("dots") or lower_cond.contains("кружки") or lower_cond.contains("коло"):
 		return Tile.Suit.DOTS
-	elif condition.contains("characters"):
+	elif lower_cond.contains("characters") or lower_cond.contains("символи") or lower_cond.contains("ієрогліфи"):
 		return Tile.Suit.CHARACTERS
-	elif condition.contains("dragons"):
+	elif lower_cond.contains("dragons") or lower_cond.contains("дракони"):
 		return Tile.Suit.DRAGONS
+	
 	return Tile.Suit.NONE
 
 static func _check_combo_condition(combo: Dictionary, condition: String) -> bool:
@@ -180,4 +245,11 @@ static func _check_combo_condition(combo: Dictionary, condition: String) -> bool
 		return true
 	
 	var combo_name = combo.get("name", "").to_lower()
-	return combo_name.contains(condition.to_lower())
+	var condition_lower = condition.to_lower()
+	
+	if condition_lower.contains("pair") or condition_lower.contains("пар"):
+		return combo_name.contains("пар")
+	elif condition_lower.contains("pong") or condition_lower.contains("понг"):
+		return combo_name.contains("понг")
+	
+	return combo_name.contains(condition_lower)

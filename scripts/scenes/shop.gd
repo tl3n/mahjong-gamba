@@ -166,7 +166,7 @@ func _show_item_details(item):
 				effect_text += "\nCondition: %s" % item.condition
 		elif item is Beer:
 			effect_text += "Type: Beer (One-time)\n"
-			effect_text += "Effect: %s\n" % item.round_effect
+			effect_text += "Effect: %s\n" % item.blind_effect
 			effect_text += "Duration: %d round(s)" % item.duration
 		
 		effect_text += "\n\nPrice: %d¥" % item.price
@@ -186,13 +186,31 @@ func _get_rarity_color(rarity: String) -> Color:
 func _on_buy_pressed(index: int):
 	if index >= shop_items.size() or shop_items[index] == null:
 		return
-	
+		
 	var item = shop_items[index]
 	
 	if inventory_node.money < item.price:
 		print("Not enough cash")
 		return
+		
+	var is_discount_beer = false
 	
+	if item is Beer:
+		if item.id == "beer_discount" or item.blind_effect == "reroll_discount":
+			is_discount_beer = true
+
+	if is_discount_beer:
+		if inventory_node.spend_money(item.price):
+			print("Applying reroll discount")
+			reroll_cost = max(0, reroll_cost - int(item.bonus_value))
+			_update_reroll_button()
+			
+			shop_items[index] = ItemDatabase.get_random_item()
+			_refresh_shop_display()
+			_save_shop_state()
+		else:
+			print("Not enough money for discount beer")
+		
 	var can_add = false
 	if item is Spirit and inventory_node.spirits.size() < inventory_node.max_spirits:
 		can_add = true
@@ -214,6 +232,7 @@ func _on_buy_pressed(index: int):
 		if selected_shop_index == index:
 			selected_shop_item = shop_items[index]
 			_show_item_details(selected_shop_item)
+		
 
 func _on_reroll_pressed():
 	if inventory_node.spend_money(reroll_cost):

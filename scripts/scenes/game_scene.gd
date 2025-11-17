@@ -16,9 +16,8 @@ var selected_tile_index: int = -1
 
 var plays_left: int = 3
 var discards_left: int = 5
-var current_score: int = 0
-var is_drawing_phase: bool = true
-var just_drawn_index: int = -1
+var is_discard_phase: bool = true 
+
 
 func _ready():
 	_check_ui_elements()
@@ -27,11 +26,15 @@ func _ready():
 	game_manager = get_node_or_null("/root/GameManager")
 	
 	if game_manager:
-		discards_left = game_manager.discards_left
+		discards_left = game_manager._recalculate_discards()
 		plays_left = game_manager.rounds_per_blind
+		
+		print("Starting game with:")
+		print("   Discards: %d" % discards_left)
+		print("   Plays: %d" % plays_left)
 	
 	if draw_button:
-		draw_button.connect("pressed", Callable(self, "_on_draw_button_pressed"))
+		draw_button.connect("pressed", Callable(self, "_on_discard_confirm_pressed"))
 	if play_hand_button:
 		play_hand_button.connect("pressed", Callable(self, "_on_play_hand_pressed"))
 	
@@ -60,19 +63,18 @@ func _check_ui_elements():
 		add_child(hand_container)
 		hand_container.position = Vector2(100, get_viewport_rect().size.y - 200)
 
-
 func _deal_initial_hand():
 	hand.clear()
-	just_drawn_index = -1
-	hand = tile_deck.draw_multiple(13)
+	selected_tile_index = -1
+	hand = tile_deck.draw_multiple(13) 
+	is_discard_phase = true  
 	
 	print("Dealt initial hand of %d tiles" % hand.size())
 	_create_hand_slots()
 
-
 func _create_hand_slots():
 	if not hand_container:
-		print(" Cannot create hand slots: HandContainer missing!")
+		print("Cannot create hand slots: HandContainer missing!")
 		return
 	
 	for child in hand_container.get_children():
@@ -88,7 +90,11 @@ func _create_tile_slot(index: int, tile: Tile) -> Control:
 	
 	var button = Button.new()
 	button.custom_minimum_size = Vector2(70, 90)
-	button.connect("pressed", Callable(self, "_on_tile_selected").bind(index))
+	
+	if is_discard_phase:
+		button.connect("pressed", Callable(self, "_on_tile_selected").bind(index))
+	else:
+		button.disabled = true
 	
 	var tile_visual = VBoxContainer.new()
 	button.add_child(tile_visual)
@@ -113,13 +119,6 @@ func _create_tile_slot(index: int, tile: Tile) -> Control:
 		style.corner_radius_bottom_left = 5
 		style.corner_radius_bottom_right = 5
 		
-		if index == just_drawn_index:
-			style.border_width_top = 3
-			style.border_width_bottom = 3
-			style.border_width_left = 3
-			style.border_width_right = 3
-			style.border_color = Color.CHARTREUSE
-		
 		button.add_theme_stylebox_override("normal", style)
 	else:
 		var empty_label = Label.new()
@@ -141,45 +140,29 @@ func _create_tile_slot(index: int, tile: Tile) -> Control:
 func _on_tile_selected(index: int):
 	if index < 0 or index >= hand.size():
 		return
-	
+
+	if not is_discard_phase:
+		print("Cannot select, not in discard phase")
+		return
+
 	if not hand_container:
 		return
-	
+
 	for i in range(hand_container.get_child_count()):
 		var child = hand_container.get_child(i)
 		if child.get_child_count() > 0:
 			var button = child.get_child(0)
 			button.remove_theme_color_override("font_color")
-	
+
 	selected_tile_index = index
 	var selected_slot = hand_container.get_child(index)
 	if selected_slot.get_child_count() > 0:
 		var button = selected_slot.get_child(0)
 		button.add_theme_color_override("font_color", Color.YELLOW)
-	
-	print("Selected tile %d: %s" % [index, hand[index].get_display_text() if hand[index] else "None"])
-	
-	if not is_drawing_phase:
-		_discard_selected_tile()
 
-func _on_draw_button_pressed():
-	if not is_drawing_phase:
-		print("Not in drawing phase!")
-		return
-	
-	if hand.size() >= 14:
-		print("Hand is full!")
-		return
-	
-	var new_tile = tile_deck.draw_tile()
-	if new_tile:
-		hand.append(new_tile)
-		just_drawn_index = hand.size() - 1
-		print("Drew tile: %s" % new_tile.get_display_text())
-		
-		is_drawing_phase = false
-		_create_hand_slots()
-		_update_ui()
+	print("Selected tile %d: %s" % [index, hand[index].get_display_text() if hand[index] else "None"])
+
+	_update_ui()
 
 func _discard_selected_tile():
 	if selected_tile_index < 0 or selected_tile_index >= hand.size():
@@ -190,14 +173,14 @@ func _discard_selected_tile():
 	if tile_to_discard == null:
 		return
 	
+	print("Discarding tile: %s" % tile_to_discard.get_display_text())
 	tile_deck.discard_to_closed(tile_to_discard)
 	hand.remove_at(selected_tile_index)
-	selected_tile_index = -1
 	
+	selected_tile_index = -1
 	discards_left -= 1
 	
-	is_drawing_phase = true
-	just_drawn_index = -1
+	is_discard_phase = false  
 	
 	_create_hand_slots()
 	_update_ui()
@@ -207,7 +190,11 @@ func _discard_selected_tile():
 
 func _on_play_hand_pressed():
 	if plays_left <= 0:
-		print("No plays left!")
+		print("No plays left")
+		return
+	
+	if hand.size() != 13:
+		print("Must have exactly 13 tiles to play! Current: %d" % hand.size())
 		return
 	
 	plays_left -= 1 
@@ -221,50 +208,128 @@ func _on_play_hand_pressed():
 		var base_score = ComboDetector.calculate_score(hand, combo)
 		var final_score = ComboDetector.apply_spirit_bonuses(base_score, combo, hand)
 		
-		current_score += final_score
-		
-		print("Hand played, Score: +%d (Total: %d)" % [final_score, current_score])
-		
 		if game_manager:
 			game_manager.add_score(final_score)
-			
-	if current_score >= game_manager.target_score || plays_left <= 0:
-		print(" ENDING BLIND ")
+		
+		print("Hand played, Score: +%d (Global total: %d)" % [
+			final_score, 
+			game_manager.current_score if game_manager else 0
+		])
+	
+	var should_end = false
+	if game_manager:
+		should_end = (game_manager.current_score >= game_manager.target_score) or (plays_left <= 0)
+	else:
+		should_end = (plays_left <= 0)
+	
+	if should_end:
+		print("ENDING BLIND")
 		_check_final_score()
 		return
-		
-	discards_left = game_manager.base_discards
+	
+	if game_manager:
+		discards_left = game_manager._recalculate_discards()
+	else:
+		discards_left = 5
+	
 	print("   Resetting discards to %d" % discards_left)
 	_deal_initial_hand()
 	_update_ui()
 
 func _check_final_score():
-	print("   Final score: %d" % current_score)
+	if not game_manager:
+		print("GameManager not found")
+		return
 	
-	if game_manager:
-		if current_score >= game_manager.target_score:
-			_end_blind_success()
-		else:
-			_end_blind_failure() 
+	var actual_score = game_manager.current_score
+	var target = game_manager.target_score
+	
+	print("   Final score check: %d / %d" % [actual_score, target])
+	
+	if actual_score >= target:
+		print("   Target reached!")
+		_end_round_success()
+	else:
+		print("   Target not reached")
+		_end_round_failure() 
 
-func _end_blind_success():
+func _end_round_success():
 	print("=== BLIND %d COMPLETED ===" % game_manager.current_blind)
+	
 	if game_manager:
 		game_manager.set_final_stats(discards_left, plays_left)
 		game_manager._on_blind_completed()
 
-func _end_blind_failure():
+func _end_round_failure():
 	print("=== GAME OVER ===")
 	
-	if game_manager:
-		game_manager._on_blind_failed()
+	print("Deleting save file")
+	var save_system = get_node_or_null("/root/SaveSystem")
+	if save_system:
+		if save_system.has_method("delete_save"):
+			save_system.delete_save()
+			print("Save deleted via SaveSystem")
+		else:
+			print("SaveSystem found but no delete_save method")
+	else:
+		print("SaveSystem not found, trying direct deletion")
+		const SAVE_FILE = "user://mahjong_save.dat"
+		if FileAccess.file_exists(SAVE_FILE):
+			DirAccess.remove_absolute(SAVE_FILE)
+			print("Save file deleted directly")
+		else:
+			print("No save file exists")
+	
+	await get_tree().create_timer(0.5).timeout
+	get_tree().change_scene_to_file("res://scenes/main/main_menu.tscn")
 
+func _on_game_over_signal():
+	_end_round_failure()
+	
+func _draw_tile():
+	if hand.size() >= 13:
+		print("Hand is full, cannot draw new tile.")
+		return
+
+	var new_tile = tile_deck.draw_tile()
+	if new_tile:
+		hand.append(new_tile)
+		print("   Drew tile: %s" % new_tile.get_display_text())
+	else:
+		print("   Deck is empty!")
+		
+func _on_discard_confirm_pressed():
+	if selected_tile_index < 0 or selected_tile_index >= hand.size():
+		print("No tile selected to discard!")
+		return
+
+	if discards_left <= 0:
+		print("No discards left!")
+		return
+
+	print("Confirming discard...")
+
+	var tile_to_discard = hand.pop_at(selected_tile_index)
+	tile_deck.discard_to_closed(tile_to_discard)
+	discards_left -= 1
+
+	selected_tile_index = -1
+
+	_draw_tile() 
+
+	_create_hand_slots()
+	_update_ui()
+
+	if discards_left <= 0:
+		print("   No more discards left for this hand.")
+		
 func _update_ui():
 	if discards_label:
 		discards_label.text = "Discards left: %d" % discards_left
 	
 	if score_label:
-		score_label.text = "Score: %d" % current_score
+		var display_score = game_manager.current_score if game_manager else 0
+		score_label.text = "Score: %d" % display_score
 	
 	if target_label:
 		if game_manager:
@@ -273,18 +338,18 @@ func _update_ui():
 			target_label.text = "Target: 600"
 	
 	if draw_button:
-		if not is_drawing_phase:
-			draw_button.disabled = true
-			draw_button.text = "Discard first"
-		elif discards_left <= 0:
-			draw_button.disabled = true
-			draw_button.text = "No Discards"
-		else:
+		if is_discard_phase and selected_tile_index != -1 and discards_left > 0:
+			draw_button.text = "Discard Tile"
 			draw_button.disabled = false
-			draw_button.text = "Draw Tile"
+		elif discards_left <= 0:
+			draw_button.text = "No Discards"
+			draw_button.disabled = true
+		else:
+			draw_button.disabled = true 
+			draw_button.text = "Select Tile"
 	
 	if play_hand_button:
-		play_hand_button.disabled = (not is_drawing_phase) or (plays_left <= 0)
+		play_hand_button.disabled = (not is_discard_phase) or (plays_left <= 0) or (hand.size() != 13)
 	
 	if open_discard_container:
 		_update_open_discard_display()
@@ -314,13 +379,14 @@ func _create_discard_tile_slot(index: int, tile: Tile) -> Control:
 	return button
 
 func _on_discard_tile_clicked(index: int):
-	if not is_drawing_phase:
-		print("Can only draw from discard during drawing phase!")
+	if not is_discard_phase:
+		print("Can only draw from discard during discard phase!")
 		return
 	
-	var tile = tile_deck.draw_from_open_discard(index)
-	if tile:
-		hand.append(tile)
-		is_drawing_phase = false
-		_create_hand_slots()
-		_update_ui()
+	if selected_tile_index >= 0:
+		var tile = tile_deck.draw_from_open_discard(index)
+		if tile:
+			hand.append(tile)
+			is_discard_phase = false
+			_create_hand_slots()
+			_update_ui()
