@@ -79,7 +79,8 @@ func _apply_beer_effects():
 				active_bonus_money += int(beer.bonus_value)
 			"first_combo_boost":
 				active_first_combo_boost += beer.bonus_value
-
+				
+	
 func _recalculate_rounds():
 	rounds_per_blind = base_rounds_per_blind
 	
@@ -199,7 +200,7 @@ func _go_to_shop():
 	print("Going to shop")
 	
 	_calculate_round_bonus()
-	
+		
 	_update_beer_durations()
 	
 	current_blind += 1
@@ -213,6 +214,7 @@ func _go_to_shop():
 	var save_system = get_node_or_null("/root/SaveSystem")
 	if save_system:
 		save_system.save_game()
+		save_system.clear_cached_shop_state()
 	
 	get_tree().change_scene_to_file("res://scenes/main/shop_scene.tscn")
 	

@@ -129,6 +129,10 @@ func _serialize_item(item: Item) -> Dictionary:
 	
 	return data
 
+func clear_cached_shop_state():
+	print("Clearing cached shop state for new blind...")
+	cached_shop_items.clear()
+	
 func _deserialize_inventory(data: Dictionary):
 	var inv = get_node_or_null("/root/Inventory")
 	if not inv:
