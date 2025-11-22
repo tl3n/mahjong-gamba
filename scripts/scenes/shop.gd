@@ -27,7 +27,7 @@ func _ready():
 	reroll_button.connect("pressed", Callable(self, "_on_reroll_pressed"))
 	start_blind_button.connect("pressed", Callable(self, "_on_start_blind_pressed"))
 	
-	var inv_scene = load("res://scenes/ui/Inventory.tscn")
+	var inv_scene = load("res://scenes/ui/inventory.tscn")
 	var inv_instance = inv_scene.instantiate()
 	inventory_panel.add_child(inv_instance)
 	

@@ -23,6 +23,9 @@ var active_first_combo_boost: float = 0.0
 var active_bonus_money: int = 0
 var active_extra_discards: int = 0
 
+var active_greed_money_bonus: int = 0      
+var active_spirit_round_penalty: int = 0   
+
 func _ready():
 	print("GameManager initialized")
 	_recalculate_rounds()
@@ -84,14 +87,28 @@ func _apply_beer_effects():
 func _recalculate_rounds():
 	rounds_per_blind = base_rounds_per_blind
 	
+	active_greed_money_bonus = 0
+	active_spirit_round_penalty = 0
+	
 	var inventory = get_node_or_null("/root/Inventory")
 	if inventory:
 		for spirit in inventory.spirits:
 			if spirit.effect_type == "extra_round":
 				rounds_per_blind += int(spirit.effect_value)
 				print("  %s: +%d round(s)" % [spirit.name, int(spirit.effect_value)])
-	
+			if spirit.effect_type == "minus_round":
+				var penalty = int(spirit.effect_value) # Це буде -1
+				rounds_per_blind += penalty
+				active_spirit_round_penalty += penalty 
+				active_greed_money_bonus += int(spirit.bonus_value)
+				print("  %s: Greed penalty: %d round(s), Money bonus: %d" % [spirit.name, penalty, int(spirit.bonus_value)])
+	rounds_per_blind = max(1, rounds_per_blind)
 	print("  Total rounds: %d" % rounds_per_blind)
+	
+	if active_greed_money_bonus > 0:
+		active_greed_money_bonus *= rounds_per_blind
+		print("  Total Greed money bonus for blind: %d (per round) * %d (total rounds)" % [active_greed_money_bonus / rounds_per_blind, rounds_per_blind])
+	return rounds_per_blind
 
 func _recalculate_discards():
 	var total = base_discards
@@ -138,6 +155,10 @@ func _calculate_round_bonus():
 	total_bonus_money += base_blind_income
 	print("  Base blind income: +%d money" % base_blind_income)
 	
+	if active_greed_money_bonus > 0:
+		total_bonus_money += active_greed_money_bonus
+		print("  Greed Spirit bonus: +%d money for playing blind" % active_greed_money_bonus)
+	
 	var beer_bonus = _calculate_beer_money_bonus()
 	if beer_bonus > 0:
 		total_bonus_money += beer_bonus
@@ -178,6 +199,9 @@ func reset_game():
 	active_first_combo_boost = 0.0
 	active_bonus_money = 0
 	active_extra_discards = 0
+	
+	active_greed_money_bonus = 0     
+	active_spirit_round_penalty = 0   
 	
 	_recalculate_rounds() 
 	

@@ -27,7 +27,7 @@ func _ready():
 	
 	if game_manager:
 		discards_left = game_manager._recalculate_discards()
-		plays_left = game_manager.rounds_per_blind
+		plays_left = game_manager._recalculate_rounds()
 		
 		print("Starting game with:")
 		print("   Discards: %d" % discards_left)

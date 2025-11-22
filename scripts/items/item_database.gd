@@ -217,6 +217,17 @@ static var spirits_data = [
 		"effect_type": "extra_discard",
 		"effect_value": 1.0,
 		"condition": ""
+	},
+	{
+		"id": "spirit_greed",
+		"name": "Дух Жадоби",
+		"description": "+1 гроша за зіграний раунд, але -1 раунд від блайнду",
+		"rarity": "Історична", 
+		"price": 6, 
+		"effect_type": "minus_round",
+		"effect_value": -1.0,  # Штраф до раундів (-1 раунд)
+		"bonus_value": 2.0,   # Бонус до грошей (+1 валюта)
+		"condition": ""
 	}
 ]
 
@@ -334,6 +345,7 @@ static func create_spirit_from_data(data: Dictionary) -> Spirit:
 	s.effect_value = data.get("effect_value", 0.0)
 	s.condition = data.get("condition", "")
 	s.permanent = true
+	s.bonus_value = data.get("bonus_value", 0.0)
 	return s
 
 static func create_beer_from_data(data: Dictionary) -> Beer:
