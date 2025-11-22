@@ -27,6 +27,9 @@ func set_item(item_ref):
 		
 		var color = _get_rarity_color(item.rarity)
 		add_theme_color_override("font_outline_color", color)
+		
+		name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 
 func _get_rarity_color(rarity: String) -> Color:
 	match rarity:

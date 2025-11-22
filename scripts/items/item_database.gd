@@ -2,12 +2,12 @@ extends Node
 class_name ItemDatabase
 
 const RARITY_WEIGHTS = {
-	"Історична": 50.0, # 50% chance
-	"Historic": 50.0,
-	"Міфічна": 20.0, # 30% chance
-	"Mythic": 20.0,
-	"Легендарна": 5.0, # 20% chance
-	"Legendary": 5.0
+	"Історична": 65.0, # 65% chance
+	"Historic": 65.0,
+	"Міфічна": 25.0, # 25% chance
+	"Mythic": 25.0,
+	"Легендарна": 10.0, # 10% chance
+	"Legendary": 10.0
 }
 
 static var spirits_data = [

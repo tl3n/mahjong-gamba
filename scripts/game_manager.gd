@@ -8,6 +8,7 @@ var current_blind: int = 1
 var current_round: int = 1
 var current_score: int = 0
 var target_score: int = 800
+var rounds_left: int = rounds_per_blind
 var discards_left: int = 5
 var is_game_active: bool = false
 
@@ -187,6 +188,7 @@ func reset_game():
 	
 	current_blind = 1
 	current_round = 1
+	rounds_left = rounds_per_blind
 	current_score = 0
 	target_score = 800
 	discards_left = base_discards
@@ -212,12 +214,12 @@ func _on_blind_completed():
 	
 	is_game_active = false
 	emit_signal("blind_completed")
-	reset_game()
 	_go_to_shop()
 
 func _on_blind_failed():
 	print("Blind failed - deleting save")
 	emit_signal("blind_failed")
+	reset_game()
 	_go_to_main_menu()
 
 func _go_to_shop():
@@ -228,6 +230,8 @@ func _go_to_shop():
 	_update_beer_durations()
 	
 	current_blind += 1
+	current_round = 1
+	rounds_left = rounds_per_blind
 	current_score = 0  
 	
 	target_score += 200 #TODO: balance this thing

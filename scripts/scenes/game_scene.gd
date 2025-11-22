@@ -4,9 +4,12 @@ extends Control
 @onready var open_discard_container: HBoxContainer = get_node_or_null("UI/OpenDiscardContainer")
 @onready var score_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/ScoreLabel")
 @onready var target_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/TargetLabel")
+@onready var blind_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/BlindLabel")
+@onready var round_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/RoundLabel")
 @onready var discards_label: Label = get_node_or_null("UI/ControlPanel/DiscardsLabel")
 @onready var draw_button: Button = get_node_or_null("UI/ControlPanel/DrawButton")
 @onready var play_hand_button: Button = get_node_or_null("UI/ControlPanel/PlayHandButton")
+@onready var inventory_button: Button = get_node_or_null("UI/ControlPanel/InventoryButton")
 
 var tile_deck: TileDeck
 var game_manager: Node
@@ -37,6 +40,8 @@ func _ready():
 		draw_button.connect("pressed", Callable(self, "_on_discard_confirm_pressed"))
 	if play_hand_button:
 		play_hand_button.connect("pressed", Callable(self, "_on_play_hand_pressed"))
+	if inventory_button:
+		inventory_button.connect("pressed", Callable(self, "_on_inventory_pressed"))
 	
 	_deal_initial_hand()
 	_update_ui()
@@ -46,6 +51,29 @@ func _ready():
 	print("   Discards left: %d" % discards_left)
 	print("   Plays left: %d" % plays_left)
 
+func _on_inventory_pressed():
+	print("Opening inventory...")
+	
+	if has_node("InventoryPopup"):
+		get_node("InventoryPopup").queue_free()
+		return
+	
+	var inv_scene = load("res://scenes/ui/inventory.tscn")
+	if inv_scene:
+		var inv_instance = inv_scene.instantiate()
+		inv_instance.name = "InventoryPopup" 
+		add_child(inv_instance)
+		
+		if inv_instance is Control:
+			var viewport_size = get_viewport_rect().size
+			inv_instance.position = Vector2(viewport_size.x - 820, 200)
+			inv_instance.custom_minimum_size = Vector2(400, 550)
+			
+			var sell_btn = inv_instance.get_node_or_null("HBoxContainer/VBoxContainer/Buttons/Sell")
+			if sell_btn:
+				sell_btn.visible = false
+				
+
 func _check_ui_elements():
 	print("\nChecking UI elements:")
 	print("   HandContainer: %s" % ("✅" if hand_container else "MISSING"))
@@ -53,6 +81,8 @@ func _check_ui_elements():
 	print("   ScoreLabel: %s" % ("✅" if score_label else "Optional"))
 	print("   TargetLabel: %s" % ("✅" if target_label else "Optional"))
 	print("   DiscardsLabel: %s" % ("✅" if discards_label else "Optional"))
+	print("   BlindLabel: %s" % ("✅" if blind_label else "Optional"))
+	print("   RoundLabel: %s" % ("✅" if round_label else "Optional"))
 	print("   DrawButton: %s" % ("✅" if draw_button else "MISSING"))
 	print("   PlayHandButton: %s" % ("✅" if play_hand_button else "MISSING"))
 	
@@ -197,6 +227,8 @@ func _on_play_hand_pressed():
 		print("Must have exactly 13 tiles to play! Current: %d" % hand.size())
 		return
 	
+	game_manager.current_round+=1
+	
 	plays_left -= 1 
 	print("\n=== PLAYING HAND (%d left) ===" % plays_left)
 	
@@ -263,22 +295,23 @@ func _end_round_success():
 func _end_round_failure():
 	print("=== GAME OVER ===")
 	
-	print("Deleting save file")
 	var save_system = get_node_or_null("/root/SaveSystem")
-	if save_system:
-		if save_system.has_method("delete_save"):
-			save_system.delete_save()
-			print("Save deleted via SaveSystem")
-		else:
-			print("SaveSystem found but no delete_save method")
+	
+	if save_system and game_manager:
+		var reached_blind = game_manager.current_blind
+		print("Updating stats: reached blind %d" % reached_blind)
+		save_system.update_profile_stats(reached_blind)
 	else:
-		print("SaveSystem not found, trying direct deletion")
-		const SAVE_FILE = "user://mahjong_save.dat"
-		if FileAccess.file_exists(SAVE_FILE):
-			DirAccess.remove_absolute(SAVE_FILE)
-			print("Save file deleted directly")
-		else:
-			print("No save file exists")
+		print("ERROR: Cannot update stats - SaveSystem or GameManager not found!")
+		if not save_system:
+			print("  SaveSystem is null")
+		if not game_manager:
+			print("  GameManager is null")
+	
+	print("Deleting save file")
+	if save_system:
+		save_system.delete_save()
+		print("Save deleted (profile stats kept)")
 	
 	await get_tree().create_timer(0.5).timeout
 	get_tree().change_scene_to_file("res://scenes/main/main_menu.tscn")
@@ -336,6 +369,15 @@ func _update_ui():
 			target_label.text = "Target: %d" % game_manager.target_score
 		else:
 			target_label.text = "Target: 600"
+	
+	if blind_label:
+		if game_manager:
+			blind_label.text = "Current Blind: %d" % game_manager.current_blind
+		else:
+			blind_label.text = "Current Blind: 1"
+			
+	if round_label:
+		round_label.text = "Rounds left: %d" % plays_left
 	
 	if draw_button:
 		if is_discard_phase and selected_tile_index != -1 and discards_left > 0:

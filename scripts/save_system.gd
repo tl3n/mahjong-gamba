@@ -1,12 +1,57 @@
 extends Node
 
-const SAVE_FILE = "user://mahjong_save.dat"
+var current_profile_name: String = ""
 
 var cached_shop_items: Array = []
 var cached_reroll_cost: int = 3
 
+func get_save_path() -> String:
+	if current_profile_name == "":
+		return ""
+	return "user://save_%s.dat" % current_profile_name
+
+
+func set_current_profile(profile_name: String):
+	current_profile_name = profile_name
+	print("Profile selected: %s" % current_profile_name)
+
+func create_profile(new_name: String) -> bool:
+	# Перевірка на заборонені символи
+	if new_name.is_empty() or new_name.contains("/") or new_name.contains("\\") or new_name.contains(":"):
+		print("❌ Invalid profile name: %s" % new_name)
+		return false
+		
+	current_profile_name = new_name
+	
+	# Скидаємо гру перед створенням нового профілю, 
+	# щоб не зберегти стан з попередньої сесії
+	var gm = get_node_or_null("/root/GameManager")
+	if gm:
+		gm.reset_game()
+		
+	var inventory = get_node_or_null("/root/Inventory")
+	if inventory:
+		# Очищаємо інвентар для нового профілю
+		inventory.money = inventory.starting_money
+		inventory.spirits.clear()
+		inventory.beers.clear()
+	
+	# Пробуємо зберегти
+	if save_game():
+		print("✅ Profile created: %s" % new_name)
+		return true
+	else:
+		print("❌ Failed to create profile file!")
+		current_profile_name = "" # Скидаємо, якщо не вийшло
+		return false
+
 func save_game():
-	print("\n=== SAVING GAME ===")
+	var path = get_save_path()
+	if path == "":
+		print("Cannot save: No profile selected!")
+		return false
+
+	print("\n=== SAVING GAME (%s) ===" % current_profile_name)
 	
 	var save_data = {
 		"inventory": _serialize_inventory(),
@@ -14,46 +59,28 @@ func save_game():
 		"shop_state": _serialize_shop_state()
 	}
 	
-	print("Inventory data: %d spirits, %d beers, %d money" % [
-		save_data["inventory"]["spirits"].size(),
-		save_data["inventory"]["beers"].size(),
-		save_data["inventory"]["money"]
-	])
-	print("Shop data: %d items, reroll cost: %d" % [
-		save_data["shop_state"]["items"].size(),
-		save_data["shop_state"]["reroll_cost"]
-	])
-	
-	var file = FileAccess.open(SAVE_FILE, FileAccess.WRITE)
+	var file = FileAccess.open(path, FileAccess.WRITE)
 	if file:
 		file.store_var(save_data)
 		file.close()
-		print("Game saved successfully")
-		print("Save path:", ProjectSettings.globalize_path(SAVE_FILE))
+		print("Game saved successfully to: %s" % path)
 		return true
 	else:
 		print("Saving error!")
 		return false
 
 func load_game() -> bool:
-	if not FileAccess.file_exists(SAVE_FILE):
-		print("Savefile not found")
+	var path = get_save_path()
+	if path == "" or not FileAccess.file_exists(path):
+		print("Savefile not found for profile: %s" % current_profile_name)
 		return false
 	
-	print("\n === LOADING GAME ===")
+	print("\n === LOADING GAME (%s) ===" % current_profile_name)
 	
-	var file = FileAccess.open(SAVE_FILE, FileAccess.READ)
+	var file = FileAccess.open(path, FileAccess.READ)
 	if file:
 		var save_data = file.get_var()
 		file.close()
-		
-		if save_data.has("inventory"):
-			var inv_data = save_data["inventory"]
-			print("Loading inventory: %d spirits, %d beers, %d money" % [
-				inv_data.get("spirits", []).size(),
-				inv_data.get("beers", []).size(),
-				inv_data.get("money", 0)
-			])
 		
 		_deserialize_inventory(save_data.get("inventory", {}))
 		_deserialize_game_state(save_data.get("game_state", {}))
@@ -66,205 +93,196 @@ func load_game() -> bool:
 		return false
 
 func has_save() -> bool:
-	return FileAccess.file_exists(SAVE_FILE)
+	var path = get_save_path()
+	return path != "" and FileAccess.file_exists(path)
 
 func delete_save():
-	if FileAccess.file_exists(SAVE_FILE):
-		DirAccess.remove_absolute(SAVE_FILE)
-		print("Saves deleted")
+	var path = get_save_path()
+	if path != "" and FileAccess.file_exists(path):
+		DirAccess.remove_absolute(path)
+		print("Save deleted for profile: %s" % current_profile_name)
 
-func _serialize_inventory() -> Dictionary:
-	var inv = get_node_or_null("/root/Inventory")
-	if not inv:
-		print(" Inventory node not found during serialization!")
-		return {}
-	
-	var spirits_data = []
-	for spirit in inv.spirits:
-		var serialized = _serialize_item(spirit)
-		spirits_data.append(serialized)
-		print("Serializing spirit: %s (type: %s)" % [spirit.name, serialized.get("type", "MISSING")])
-	
-	var beers_data = []
-	for beer in inv.beers:
-		var serialized = _serialize_item(beer)
-		beers_data.append(serialized)
-		print("Serializing beer: %s (type: %s)" % [beer.name, serialized.get("type", "MISSING")])
-	
-	return {
-		"spirits": spirits_data,
-		"beers": beers_data,
-		"money": inv.money
-	}
-
-func _serialize_item(item: Item) -> Dictionary:
-	if item == null:
-		return {}
-	
-	var data = {
-		"id": item.id,
-		"name": item.name,
-		"description": item.description,
-		"rarity": item.rarity,
-		"price": item.price,
-		"type": item.type  
-	}
-	
-	if item is Spirit:
-		data["effect_type"] = item.effect_type
-		data["effect_value"] = item.effect_value
-		data["condition"] = item.condition
-		data["permanent"] = item.permanent
-		
-		if data["type"] == "" or data["type"] == "дух":
-			data["type"] = "spirit"
-	
-	elif item is Beer:
-		data["blind_effect"] = item.blind_effect
-		data["duration"] = item.duration
-		data["bonus_value"] = item.bonus_value
-		
-		if data["type"] == "" or data["type"] == "пиво":
-			data["type"] = "beer"
-	
-	return data
 
 func clear_cached_shop_state():
 	print("Clearing cached shop state for new blind...")
 	cached_shop_items.clear()
-	
-func _deserialize_inventory(data: Dictionary):
-	var inv = get_node_or_null("/root/Inventory")
-	if not inv:
-		print("Inventory node not found during deserialization!")
-		return
-	
-	print("Clearing inventory...")
-	inv.spirits.clear()
-	inv.beers.clear()
-	
-	print("Restoring spirits...")
-	for spirit_data in data.get("spirits", []):
-		var spirit = _deserialize_item(spirit_data)
-		if spirit:
-			inv.spirits.append(spirit)
-			print("Restored spirit: %s" % spirit.name)
-		else:
-			print("Failed to restore spirit from data: %s" % spirit_data)
-	
-	print("Restoring beers...")
-	for beer_data in data.get("beers", []):
-		var beer = _deserialize_item(beer_data)
-		if beer:
-			inv.beers.append(beer)
-			print("Restored beer: %s" % beer.name)
-		else:
-			print("Failed to restore beer from data: %s" % beer_data)
-	
-	inv.money = data.get("money", 10)
-	print("Money restored: %d" % inv.money)
-	
-	inv.emit_signal("inventory_changed")
-	inv.emit_signal("money_changed", inv.money)
-
-func _deserialize_item(data: Dictionary):
-	if data.is_empty():
-		return null
-	
-	var item_type = data.get("type", "")
-	
-	# Spirit
-	if item_type == "spirit" or item_type == "дух":
-		var spirit = Spirit.new()
-		spirit.id = data.get("id", "")
-		spirit.name = data.get("name", "")
-		spirit.description = data.get("description", "")
-		spirit.rarity = data.get("rarity", "Historic")
-		spirit.price = data.get("price", 0)
-		spirit.type = "spirit"  
-		spirit.effect_type = data.get("effect_type", "")
-		spirit.effect_value = data.get("effect_value", 0.0)
-		spirit.condition = data.get("condition", "")
-		spirit.permanent = data.get("permanent", true)
-		return spirit
-	
-	# Beer
-	elif item_type == "beer" or item_type == "пиво":
-		var beer = Beer.new()
-		beer.id = data.get("id", "")
-		beer.name = data.get("name", "")
-		beer.description = data.get("description", "")
-		beer.rarity = data.get("rarity", "Historic")
-		beer.price = data.get("price", 0)
-		beer.type = "beer"  
-		beer.round_effect = data.get("round_effect", "")
-		beer.duration = data.get("duration", 1)
-		beer.bonus_value = data.get("bonus_value", 0.0)
-		return beer
-	
-	print(" Unknown item type: '%s' for item: %s" % [item_type, data.get("name", "UNNAMED")])
-	return null
 
 func save_shop_state(items: Array, reroll_cost: int):
-	print("\n Saving shop state...")
 	cached_shop_items = items.duplicate()
 	cached_reroll_cost = reroll_cost
-	print("  Items cached: %d" % cached_shop_items.size())
-	print("  Reroll cost: %d" % cached_reroll_cost)
 	save_game()
-
-func _serialize_shop_state() -> Dictionary:
-	var items_data = []
-	for item in cached_shop_items:
-		if item:
-			items_data.append(_serialize_item(item))
-	
-	return {
-		"items": items_data,
-		"reroll_cost": cached_reroll_cost
-	}
-
-func _deserialize_shop_state(data: Dictionary):
-	print("  Restoring shop state...")
-	cached_shop_items.clear()
-	
-	for item_data in data.get("items", []):
-		var item = _deserialize_item(item_data)
-		if item:
-			cached_shop_items.append(item)
-	
-	cached_reroll_cost = data.get("reroll_cost", 3)
-	print("    Shop items: %d" % cached_shop_items.size())
-	print("    Reroll cost: %d" % cached_reroll_cost)
 
 func load_shop_state() -> Dictionary:
 	return {
 		"items": cached_shop_items.duplicate(),
 		"reroll_cost": cached_reroll_cost
 	}
+
+func _serialize_inventory() -> Dictionary:
+	var inv = get_node_or_null("/root/Inventory")
+	if not inv: return {}
+	var spirits_data = []
+	for s in inv.spirits: spirits_data.append(_serialize_item(s))
+	var beers_data = []
+	for b in inv.beers: beers_data.append(_serialize_item(b))
+	return {"spirits": spirits_data, "beers": beers_data, "money": inv.money}
+
+func _serialize_item(item: Item) -> Dictionary:
+	if item == null: return {}
+	var data = {"id": item.id, "name": item.name, "description": item.description, "rarity": item.rarity, "price": item.price, "type": item.type}
+	if item is Spirit:
+		data["effect_type"] = item.effect_type; data["effect_value"] = item.effect_value; data["condition"] = item.condition; data["permanent"] = item.permanent
+		if data["type"] == "": data["type"] = "spirit"
+	elif item is Beer:
+		data["blind_effect"] = item.blind_effect; data["duration"] = item.duration; data["bonus_value"] = item.bonus_value
+		if data["type"] == "": data["type"] = "beer"
+	return data
+
+func _deserialize_inventory(data: Dictionary):
+	var inv = get_node_or_null("/root/Inventory")
+	if not inv: return
+	inv.spirits.clear(); inv.beers.clear()
+	for s in data.get("spirits", []): 
+		var spirit = _deserialize_item(s)
+		if spirit: inv.spirits.append(spirit)
+	for b in data.get("beers", []):
+		var beer = _deserialize_item(b)
+		if beer: inv.beers.append(beer)
+	inv.money = data.get("money", 10)
+	inv.emit_signal("inventory_changed"); inv.emit_signal("money_changed", inv.money)
+
+func _deserialize_item(data: Dictionary):
+	if data.is_empty(): return null
+	var type = data.get("type", "")
+	if type == "spirit": return ItemDatabase.create_spirit_from_data(data)
+	elif type == "beer": return ItemDatabase.create_beer_from_data(data)
+	return null
+
+func _serialize_shop_state() -> Dictionary:
+	var items_data = []
+	for item in cached_shop_items: items_data.append(_serialize_item(item))
+	return {"items": items_data, "reroll_cost": cached_reroll_cost}
+
+func _deserialize_shop_state(data: Dictionary):
+	cached_shop_items.clear()
+	for idata in data.get("items", []):
+		var item = _deserialize_item(idata)
+		# Важливо: додаємо item навіть якщо він null (щоб зберегти порожні слоти)
+		cached_shop_items.append(item) 
+	cached_reroll_cost = data.get("reroll_cost", 3)
+
 # TODO: After making the main gameplay, insert the data gained from there here in order to save progress
 func _serialize_game_state() -> Dictionary:
 	var gm = get_node_or_null("/root/GameManager")
-	if not gm:
-		return {}
-	
+	if not gm: return {}
 	return {
-		"current_blind": gm.current_blind,
-		"current_round": gm.current_round,
-		"current_score": gm.current_score,
-		"target_score": gm.target_score,
-		"discards_left": gm.discards_left,
-		"is_game_active": gm.is_game_active
+		"current_blind": gm.current_blind, "current_round": gm.current_round,
+		"current_score": gm.current_score, "target_score": gm.target_score,
+		"discards_left": gm.discards_left, "is_game_active": gm.is_game_active
 	}
 
 func _deserialize_game_state(data: Dictionary):
 	var gm = get_node_or_null("/root/GameManager")
-	if not gm:
-		return
-	
-	gm.current_blind = data.get("current_blind", 0)
-	gm.current_round = data.get("current_round", 0)
+	if not gm: return
+	gm.current_blind = data.get("current_blind", 1)
+	gm.current_round = data.get("current_round", 1)
 	gm.current_score = data.get("current_score", 0)
-	gm.target_score = data.get("target_score", 1000)
+	gm.target_score = data.get("target_score", 800)
 	gm.discards_left = data.get("discards_left", 5)
 	gm.is_game_active = data.get("is_game_active", false)
+
+func get_all_profiles() -> Array[String]:
+	var profiles_set = {}  # Використовуємо як set для унікальності
+	var dir = DirAccess.open("user://")
+	
+	if dir:
+		dir.list_dir_begin()
+		var file_name = dir.get_next()
+		
+		while file_name != "":
+			if not dir.current_is_dir():
+				var p_name = ""
+				
+				# Шукаємо сейви
+				if file_name.begins_with("save_") and file_name.ends_with(".dat"):
+					p_name = file_name.trim_prefix("save_").trim_suffix(".dat")
+					profiles_set[p_name] = true
+				
+				# Шукаємо статистику
+				elif file_name.begins_with("stats_") and file_name.ends_with(".dat"):
+					p_name = file_name.trim_prefix("stats_").trim_suffix(".dat")
+					profiles_set[p_name] = true
+			
+			file_name = dir.get_next()
+	
+	# Конвертуємо set в array
+	var profiles: Array[String] = []
+	for p in profiles_set.keys():
+		profiles.append(p)
+	
+	profiles.sort()  # Сортуємо алфавітно
+	return profiles
+
+# Статистика профілів (окремий файл від сейвів)
+func get_stats_path(profile_name: String) -> String:
+	return "user://stats_%s.dat" % profile_name
+
+func update_profile_stats(blinds_reached: int):
+	if current_profile_name == "":
+		print("Cannot update stats: no profile selected")
+		return
+	
+	var stats_path = get_stats_path(current_profile_name)
+	var stats = load_profile_stats(current_profile_name)
+	
+	print("Updating stats for %s: reached blind %d" % [current_profile_name, blinds_reached])
+	
+	# Оновлюємо максимум
+	var old_max = stats.get("max_blinds", 0)
+	if blinds_reached > old_max:
+		stats["max_blinds"] = blinds_reached
+		print("New record! Max blinds: %d (was: %d)" % [blinds_reached, old_max])
+	else:
+		print("Current max blinds remains: %d" % old_max)
+	
+	# Зберігаємо
+	var file = FileAccess.open(stats_path, FileAccess.WRITE)
+	if file:
+		file.store_var(stats)
+		file.close()
+		print("Stats saved to: %s" % stats_path)
+	else:
+		print("ERROR: Could not save stats!")
+
+func load_profile_stats(profile_name: String) -> Dictionary:
+	var stats_path = get_stats_path(profile_name)
+	
+	if not FileAccess.file_exists(stats_path):
+		print("No stats file for %s, creating default" % profile_name)
+		return {"max_blinds": 0}
+	
+	var file = FileAccess.open(stats_path, FileAccess.READ)
+	if file:
+		var stats = file.get_var()
+		file.close()
+		print("Loaded stats for %s: %s" % [profile_name, stats])
+		return stats
+	
+	return {"max_blinds": 0}
+
+func delete_profile(profile_name: String):
+	print("Deleting profile: %s" % profile_name)
+	
+	# Видаляємо і сейв, і статистику
+	var save_path = "user://save_%s.dat" % profile_name
+	var stats_path = get_stats_path(profile_name)
+	
+	if FileAccess.file_exists(save_path):
+		DirAccess.remove_absolute(save_path)
+		print("  Deleted save: %s" % save_path)
+	
+	if FileAccess.file_exists(stats_path):
+		DirAccess.remove_absolute(stats_path)
+		print("  Deleted stats: %s" % stats_path)
+	
+	print("Profile %s completely deleted" % profile_name)

@@ -108,6 +108,7 @@ func _create_shop_slots():
 func _create_shop_slot(index: int) -> Control:
 	var slot_container = VBoxContainer.new()
 	slot_container.custom_minimum_size = Vector2(180, 250)
+	slot_container.add_theme_constant_override("separation", 5) 
 
 	if index >= shop_items.size() or shop_items[index] == null:
 		slot_container.set_name("EmptySlot")
@@ -115,7 +116,7 @@ func _create_shop_slot(index: int) -> Control:
 		label.text = "[ SOLD ]"
 		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		label.custom_minimum_size = Vector2(180, 250)
+		label.custom_minimum_size = Vector2(180, 200)
 		label.modulate = Color(1, 1, 1, 0.3)
 		slot_container.add_child(label)
 		return slot_container
@@ -127,10 +128,11 @@ func _create_shop_slot(index: int) -> Control:
 	select_button.connect("pressed", Callable(self, "_on_shop_item_selected").bind(index))
 	
 	var button_content = VBoxContainer.new()
+	button_content.add_theme_constant_override("separation", 2) 
 	select_button.add_child(button_content)
 	
 	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(120, 120)
+	icon.custom_minimum_size = Vector2(90, 90) 
 	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if item.icon:
@@ -140,13 +142,18 @@ func _create_shop_slot(index: int) -> Control:
 	var name_label = Label.new()
 	name_label.text = item.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.custom_minimum_size = Vector2(170, 45) 
+	
 	button_content.add_child(name_label)
 	
 	var rarity_label = Label.new()
 	rarity_label.text = item.rarity
 	rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rarity_label.add_theme_color_override("font_color", _get_rarity_color(item.rarity))
+	# Зменшуємо шрифт рідкості трохи, щоб влізло
+	rarity_label.add_theme_font_size_override("font_size", 14)
 	button_content.add_child(rarity_label)
 	
 	slot_container.add_child(select_button)
