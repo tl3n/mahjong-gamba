@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://bl0pl8y4kefpp"]
 
-[ext_resource type="Script" uid="uid://oyec6ovmulik" path="res://scripts/shop.gd" id="1_lq7f0"]
+[ext_resource type="Script" uid="uid://oyec6ovmulik" path="res://scripts/scenes/shop.gd" id="1_lq7f0"]
 
 [node name="Shop" type="Control"]
 layout_mode = 3
@@ -50,7 +50,7 @@ offset_left = 627.0
 offset_top = 530.0
 offset_right = 756.0
 offset_bottom = 561.0
-text = "Start New Blind"
+text = "Start Blind"
 
 [node name="ItemDetailsPanel" type="Panel" parent="."]
 layout_mode = 0

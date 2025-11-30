@@ -103,7 +103,7 @@ func _update_item_details():
 	if selected_item is Spirit:
 		details += "Type: Spirit (Permanent Effect)\nEffect: %s +%s" % [selected_item.effect_type, str(selected_item.effect_value)]
 	elif selected_item is Beer:
-		details += "Type: Beer (One-time)\nEffect: %s\nDuration: %d round(s)" % [selected_item.round_effect, selected_item.duration]
+		details += "Type: Beer (One-time)\nEffect: %s\nDuration: %d round(s)" % [selected_item.blind_effect, selected_item.duration]
 	item_desc_label.text = details
 
 func _on_inventory_changed():

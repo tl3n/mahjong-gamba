@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://5u3n2uwkytcn"]
 
-[ext_resource type="Script" uid="uid://cojjsqfgftwo3" path="res://scripts/scenes/game_scene.gd" id="1_sdya7"]
+[ext_resource type="Script" uid="uid://bteq4mbqhy0i2" path="res://scripts/ui/game_scene.gd" id="1_sdya7"]
 
 [node name="GameScene" type="Control"]
 layout_mode = 3
@@ -24,15 +24,13 @@ layout_mode = 0
 offset_left = 26.0
 offset_top = 121.0
 offset_right = 326.0
-offset_bottom = 334.70844
+offset_bottom = 271.0
 scale = Vector2(0.529753, 0.52407855)
 
 [node name="VBoxContainer" type="VBoxContainer" parent="UI/ScorePanel"]
 layout_mode = 0
-offset_left = 32.090427
-offset_right = 118.09042
-offset_bottom = 50.0
-scale = Vector2(1.7706205, 1.7706205)
+offset_right = 40.0
+offset_bottom = 40.0
 
 [node name="ScoreLabel" type="Label" parent="UI/ScorePanel/VBoxContainer"]
 layout_mode = 2
@@ -42,18 +40,9 @@ text = "Score: 0"
 layout_mode = 2
 text = "Target: 600"
 
-[node name="RoundLabel" type="Label" parent="UI/ScorePanel/VBoxContainer"]
-layout_mode = 2
-text = "Rounds left: 3"
-
-[node name="BlindLabel" type="Label" parent="UI/ScorePanel/VBoxContainer"]
-layout_mode = 2
-text = "Current Blind: 1"
-
 [node name="HandContainer" type="HBoxContainer" parent="UI"]
 layout_mode = 0
-offset_left = -1.0
-offset_right = 39.0
+offset_right = 40.0
 offset_bottom = 40.0
 
 [node name="OpenDiscardContainer" type="HBoxContainer" parent="UI"]
@@ -93,17 +82,7 @@ scale = Vector2(0.29869184, 0.1970073)
 [node name="PlayHandButton" type="Button" parent="UI/ControlPanel"]
 layout_mode = 0
 offset_left = 2.212816
-offset_top = 15.550417
+offset_top = 15.007961
 offset_right = 42.212814
-offset_bottom = 23.550417
+offset_bottom = 23.007961
 scale = Vector2(0.29869184, 0.1970073)
-text = "Play Hand"
-
-[node name="InventoryButton" type="Button" parent="UI/ControlPanel"]
-layout_mode = 0
-offset_left = 1.9362139
-offset_top = 23.868084
-offset_right = 87.93621
-offset_bottom = 54.868084
-scale = Vector2(0.29869184, 0.19370368)
-text = "Inventory"

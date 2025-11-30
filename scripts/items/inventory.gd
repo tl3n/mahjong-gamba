@@ -129,7 +129,15 @@ func _item_to_dict(item: Resource) -> Dictionary:
 		d["condition"] = item.condition
 		d["permanent"] = item.permanent
 	elif item is Beer:
-		d["round_effect"] = item.round_effect
+		d["blind_effect"] = item.blind_effect
 		d["duration"] = item.duration
 		d["bonus_value"] = item.bonus_value
 	return d
+
+func clear_beers():
+	if beers.is_empty():
+		return
+		
+	print(" Consuming all beers...")
+	beers.clear()
+	emit_signal("inventory_changed")

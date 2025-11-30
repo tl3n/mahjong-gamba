@@ -27,7 +27,7 @@ func _ready():
 	reroll_button.connect("pressed", Callable(self, "_on_reroll_pressed"))
 	start_blind_button.connect("pressed", Callable(self, "_on_start_blind_pressed"))
 	
-	var inv_scene = load("res://scenes/ui/Inventory.tscn")
+	var inv_scene = load("res://scenes/ui/inventory.tscn")
 	var inv_instance = inv_scene.instantiate()
 	inventory_panel.add_child(inv_instance)
 	
@@ -64,14 +64,34 @@ func _load_or_generate_shop():
 
 func _generate_shop_items():
 	shop_items.clear()
-	for i in range(3):
-		var new_item = ItemDatabase.get_random_item()
-		if new_item:
-			shop_items.append(new_item)
-		else:
-			push_error("Failed to generate item at index %d" % i)
 	
-	print("Generated %d shop items" % shop_items.size())
+	if inventory_node == null:
+		inventory_node = Inventory 
+		if inventory_node == null:
+			push_error("Cannot generate items: Inventory node not found!")
+			return
+
+	var id_blacklist = {}
+	for item in inventory_node.spirits:
+		if item: id_blacklist[item.id] = true
+	for item in inventory_node.beers:
+		if item: id_blacklist[item.id] = true
+
+	print("Generating 3 unique shop items...")
+	
+	while shop_items.size() < 3:
+		var new_item = ItemDatabase.get_random_item()
+		if new_item == null:
+			continue
+		
+		if id_blacklist.has(new_item.id):
+			print("Generated duplicate item, re-rolling... (%s)" % new_item.name)
+			continue
+		
+		shop_items.append(new_item)
+		id_blacklist[new_item.id] = true
+		
+	print("Generated %d unique shop items" % shop_items.size())
 
 func _create_shop_slots():
 	for child in shop_slots_container.get_children():
@@ -86,24 +106,33 @@ func _create_shop_slots():
 		shop_slots_container.add_child(slot)
 
 func _create_shop_slot(index: int) -> Control:
-	if index >= shop_items.size() or shop_items[index] == null:
-		push_error("Invalid shop item at index %d" % index)
-		return Control.new() 
-	
-	var item = shop_items[index]
-	
 	var slot_container = VBoxContainer.new()
 	slot_container.custom_minimum_size = Vector2(180, 250)
+	slot_container.add_theme_constant_override("separation", 5) 
+
+	if index >= shop_items.size() or shop_items[index] == null:
+		slot_container.set_name("EmptySlot")
+		var label = Label.new()
+		label.text = "[ SOLD ]"
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		label.custom_minimum_size = Vector2(180, 200)
+		label.modulate = Color(1, 1, 1, 0.3)
+		slot_container.add_child(label)
+		return slot_container
+		
+	var item = shop_items[index]
 	
 	var select_button = Button.new()
 	select_button.custom_minimum_size = Vector2(180, 200)
 	select_button.connect("pressed", Callable(self, "_on_shop_item_selected").bind(index))
 	
 	var button_content = VBoxContainer.new()
+	button_content.add_theme_constant_override("separation", 2) 
 	select_button.add_child(button_content)
 	
 	var icon = TextureRect.new()
-	icon.custom_minimum_size = Vector2(120, 120)
+	icon.custom_minimum_size = Vector2(90, 90) 
 	icon.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	if item.icon:
@@ -113,13 +142,18 @@ func _create_shop_slot(index: int) -> Control:
 	var name_label = Label.new()
 	name_label.text = item.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.custom_minimum_size = Vector2(170, 45) 
+	
 	button_content.add_child(name_label)
 	
 	var rarity_label = Label.new()
 	rarity_label.text = item.rarity
 	rarity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	rarity_label.add_theme_color_override("font_color", _get_rarity_color(item.rarity))
+	# Зменшуємо шрифт рідкості трохи, щоб влізло
+	rarity_label.add_theme_font_size_override("font_size", 14)
 	button_content.add_child(rarity_label)
 	
 	slot_container.add_child(select_button)
@@ -166,7 +200,7 @@ func _show_item_details(item):
 				effect_text += "\nCondition: %s" % item.condition
 		elif item is Beer:
 			effect_text += "Type: Beer (One-time)\n"
-			effect_text += "Effect: %s\n" % item.round_effect
+			effect_text += "Effect: %s\n" % item.blind_effect
 			effect_text += "Duration: %d round(s)" % item.duration
 		
 		effect_text += "\n\nPrice: %d¥" % item.price
@@ -186,13 +220,31 @@ func _get_rarity_color(rarity: String) -> Color:
 func _on_buy_pressed(index: int):
 	if index >= shop_items.size() or shop_items[index] == null:
 		return
-	
+		
 	var item = shop_items[index]
 	
 	if inventory_node.money < item.price:
 		print("Not enough cash")
 		return
 	
+	var is_discount_beer = false
+	if item is Beer:
+		if item.id == "beer_discount" or item.blind_effect == "reroll_discount":
+			is_discount_beer = true
+
+	if is_discount_beer:
+		if inventory_node.spend_money(item.price):
+			print("Applying reroll discount")
+			reroll_cost = max(0, reroll_cost - int(item.bonus_value))
+			_update_reroll_button()
+			
+			shop_items[index] = null
+			_refresh_shop_display()
+			_save_shop_state()
+		else:
+			print("Not enough money for discount beer")
+		return
+
 	var can_add = false
 	if item is Spirit and inventory_node.spirits.size() < inventory_node.max_spirits:
 		can_add = true
@@ -200,20 +252,25 @@ func _on_buy_pressed(index: int):
 		can_add = true
 	
 	if not can_add:
-		print("No slots available")
+		print("No slots available for this item type")
 		return
 	
 	if inventory_node.spend_money(item.price):
 		inventory_node.add_item(item)
 		print("Purchased: %s" % item.name)
 		
-		shop_items[index] = ItemDatabase.get_random_item()
+		if item is Beer and item.blind_effect == "reroll_discount":
+			_update_reroll_button()
+		
+		shop_items[index] = null
 		_refresh_shop_display()
 		_save_shop_state()
 		
 		if selected_shop_index == index:
-			selected_shop_item = shop_items[index]
-			_show_item_details(selected_shop_item)
+			if item_details_panel:
+				item_details_panel.visible = false
+			selected_shop_item = null
+			selected_shop_index = -1
 
 func _on_reroll_pressed():
 	if inventory_node.spend_money(reroll_cost):
@@ -244,7 +301,7 @@ func _save_shop_state():
 	var save_system = get_node_or_null("/root/SaveSystem")
 	if save_system:
 		save_system.save_shop_state(shop_items, reroll_cost)
-		print("💾 Shop state saved")
+		print("Shop state saved")
 
 func _on_start_blind_pressed():
 	_save_shop_state()
