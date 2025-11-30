@@ -21,6 +21,30 @@ var weight: int:
 		else:
 			return rank  
 
+static func _sort_criterion(a: Tile, b: Tile) -> bool:
+	
+	# 1. Сортування за Мастю (Suit)
+	
+	# Створюємо спеціальний порядок, щоб NONE (0) йшов в кінець.
+	var suit_order_a = a.suit
+	if a.suit == Suit.NONE:
+		suit_order_a = 99 
+
+	var suit_order_b = b.suit
+	if b.suit == Suit.NONE:
+		suit_order_b = 99 
+		
+	# Якщо масті різні, повертаємо результат порівняння мастей
+	if suit_order_a != suit_order_b:
+		return suit_order_a < suit_order_b
+
+	# 2. Сортування за Рангом (Rank)
+	
+	# === ВИПРАВЛЕННЯ ТУТ ===
+	# Якщо ми дійшли до цього місця, це означає, що масті (suit_order_a == suit_order_b) однакові.
+	# Тепер сортуємо за рангом. Ранг (rank) від 1 до 9.
+	return a.rank < b.rank
+
 func _init(p_suit: Suit = Suit.NONE, p_rank: int = 1):
 	suit = p_suit
 	rank = p_rank

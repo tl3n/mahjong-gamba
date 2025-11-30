@@ -98,6 +98,7 @@ func _deal_initial_hand():
 	selected_tile_index = -1
 	hand = tile_deck.draw_multiple(13) 
 	is_discard_phase = true  
+	hand.sort_custom(Callable(Tile, "_sort_criterion"))
 	
 	print("Dealt initial hand of %d tiles" % hand.size())
 	_create_hand_slots()
@@ -349,7 +350,7 @@ func _on_discard_confirm_pressed():
 	selected_tile_index = -1
 
 	_draw_tile() 
-
+	hand.sort_custom(Callable(Tile, "_sort_criterion"))
 	_create_hand_slots()
 	_update_ui()
 
