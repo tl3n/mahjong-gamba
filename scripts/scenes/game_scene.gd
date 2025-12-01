@@ -6,6 +6,7 @@ extends Control
 @onready var target_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/TargetLabel")
 @onready var blind_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/BlindLabel")
 @onready var round_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/RoundLabel")
+@onready var combo_score_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/ComboScoreLabel")
 @onready var discards_label: Label = get_node_or_null("UI/ControlPanel/DiscardsLabel")
 @onready var draw_button: Button = get_node_or_null("UI/ControlPanel/DrawButton")
 @onready var play_hand_button: Button = get_node_or_null("UI/ControlPanel/PlayHandButton")
@@ -115,11 +116,15 @@ func _create_hand_slots():
 	for child in hand_container.get_children():
 		child.queue_free()
 	
+	# Get combo highlighting info
+	var combo_info = ComboDetector.get_combo_highlight_info(hand)
+	
 	for i in range(hand.size()):
-		var slot = _create_tile_slot(i, hand[i])
+		var combo_type = combo_info[i] if i < combo_info.size() else ""
+		var slot = _create_tile_slot(i, hand[i], combo_type)
 		hand_container.add_child(slot)
 
-func _create_tile_slot(index: int, tile: Tile) -> Control:
+func _create_tile_slot(index: int, tile: Tile, combo_type: String = "") -> Control:
 	var slot = VBoxContainer.new()
 	slot.custom_minimum_size = Vector2(70, 110)
 	
@@ -153,6 +158,20 @@ func _create_tile_slot(index: int, tile: Tile) -> Control:
 		style.corner_radius_top_right = 5
 		style.corner_radius_bottom_left = 5
 		style.corner_radius_bottom_right = 5
+		
+		# Combo highlighting
+		if combo_type == "pong":
+			style.border_width_top = 3
+			style.border_width_bottom = 3
+			style.border_width_left = 3
+			style.border_width_right = 3
+			style.border_color = Color(1.0, 0.84, 0.0)  # Gold for pong
+		elif combo_type == "pair":
+			style.border_width_top = 2
+			style.border_width_bottom = 2
+			style.border_width_left = 2
+			style.border_width_right = 2
+			style.border_color = Color(0.6, 0.8, 1.0)  # Light blue for pair
 		
 		button.add_theme_stylebox_override("normal", style)
 	else:
@@ -404,6 +423,17 @@ func _update_ui():
 			
 	if round_label:
 		round_label.text = "Rounds left: %d" % plays_left
+	
+	# Update current combo score preview
+	if combo_score_label:
+		var combo = ComboDetector.detect_combos(hand)
+		if combo.is_empty():
+			combo_score_label.text = "Combo: None (+0)"
+		else:
+			var base_score = ComboDetector.calculate_score(hand, combo)
+			var final_score = ComboDetector.apply_spirit_bonuses(base_score, combo, hand)
+			var combo_name = combo.get("name", "?")
+			combo_score_label.text = "Combo: %s (+%d)" % [combo_name, final_score]
 	
 	if draw_button:
 		if is_discard_phase and selected_discard_index != -1:

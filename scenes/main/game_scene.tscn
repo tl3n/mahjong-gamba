@@ -50,6 +50,10 @@ text = "Rounds left: 3"
 layout_mode = 2
 text = "Current Blind: 1"
 
+[node name="ComboScoreLabel" type="Label" parent="UI/ScorePanel/VBoxContainer"]
+layout_mode = 2
+text = "Combo: None (+0)"
+
 [node name="OpenDiscardContainer" type="HBoxContainer" parent="UI"]
 layout_mode = 1
 anchors_preset = 7

@@ -101,6 +101,47 @@ static func _group_tiles(hand: Array[Tile]) -> Dictionary:
 	
 	return groups
 
+# Returns combo type for each tile index: "pong", "pair", or "" (no combo)
+static func get_combo_highlight_info(hand: Array[Tile]) -> Array[String]:
+	var result: Array[String] = []
+	result.resize(hand.size())
+	for i in range(hand.size()):
+		result[i] = ""
+	
+	# Count tiles by key
+	var tile_counts = {}
+	var tile_indices = {}
+	
+	for i in range(hand.size()):
+		var tile = hand[i]
+		if tile == null:
+			continue
+		
+		var key = "%d_%d" % [tile.suit, tile.rank]
+		
+		if not tile_counts.has(key):
+			tile_counts[key] = 0
+			tile_indices[key] = []
+		
+		tile_counts[key] += 1
+		tile_indices[key].append(i)
+	
+	# Mark combo tiles
+	for key in tile_counts:
+		var count = tile_counts[key]
+		var indices = tile_indices[key]
+		
+		if count >= 3:
+			# Pong - mark first 3 tiles
+			for j in range(min(3, indices.size())):
+				result[indices[j]] = "pong"
+		elif count >= 2:
+			# Pair - mark first 2 tiles
+			for j in range(min(2, indices.size())):
+				result[indices[j]] = "pair"
+	
+	return result
+
 static func _determine_best_combo(pairs: int, pongs: int) -> Dictionary:
 	if pongs >= 4 and pairs >= 1:
 		return COMBOS["winning_hand"]
