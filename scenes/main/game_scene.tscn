@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://5u3n2uwkytcn"]
+[gd_scene load_steps=9 format=3 uid="uid://5u3n2uwkytcn"]
 
 [ext_resource type="Script" uid="uid://cojjsqfgftwo3" path="res://scripts/scenes/game_scene.gd" id="1_sdya7"]
 
@@ -42,6 +42,35 @@ corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_overlay"]
+bg_color = Color(0.02, 0.04, 0.03, 0.85)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_panel"]
+bg_color = Color(0.08, 0.12, 0.1, 0.98)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.4, 0.6, 0.45, 0.9)
+corner_radius_top_left = 20
+corner_radius_top_right = 20
+corner_radius_bottom_right = 20
+corner_radius_bottom_left = 20
+shadow_color = Color(0, 0, 0, 0.5)
+shadow_size = 20
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pause_button"]
+bg_color = Color(0.15, 0.22, 0.18, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.6, 0.48, 0.9)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="GameScene" type="Control"]
 layout_mode = 3
@@ -287,3 +316,91 @@ offset_bottom = -10.0
 grow_horizontal = 2
 grow_vertical = 0
 alignment = 1
+
+[node name="PauseOverlay" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pause_overlay")
+
+[node name="CenterContainer" type="CenterContainer" parent="PauseOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="PausePanel" type="PanelContainer" parent="PauseOverlay/CenterContainer"]
+custom_minimum_size = Vector2(320, 380)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_pause_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="PauseOverlay/CenterContainer/PausePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 30
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 32
+text = "⏸ PAUSED"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ButtonsContainer" type="VBoxContainer" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ResumeButton" type="Button" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 1.0, 0.95, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_button")
+text = "▶ Resume"
+
+[node name="SaveButton" type="Button" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.95, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_button")
+text = "💾 Save & Continue"
+
+[node name="MainMenuButton" type="Button" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.8, 0.6, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_button")
+text = "🏠 Main Menu"
+
+[node name="QuitButton" type="Button" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.6, 0.5, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_button")
+text = "✕ Quit Game"
+
+[node name="HintLabel" type="Label" parent="PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.65, 0.7)
+theme_override_font_sizes/font_size = 12
+text = "Press ESC to resume"
+horizontal_alignment = 1

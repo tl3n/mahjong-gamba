@@ -14,6 +14,15 @@ extends Control
 @onready var hint_label: Label = get_node_or_null("UI/HintLabel")
 @onready var score_popup: Label = get_node_or_null("UI/ScorePopup")
 
+# Pause menu
+@onready var pause_overlay: Panel = get_node_or_null("PauseOverlay")
+@onready var resume_button: Button = get_node_or_null("PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer/ResumeButton")
+@onready var save_button: Button = get_node_or_null("PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer/SaveButton")
+@onready var main_menu_button: Button = get_node_or_null("PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer/MainMenuButton")
+@onready var quit_button: Button = get_node_or_null("PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer/QuitButton")
+
+var is_paused: bool = false
+
 var tile_deck: TileDeck
 var game_manager: Node
 
@@ -47,12 +56,26 @@ func _ready():
 	if inventory_button:
 		inventory_button.connect("pressed", Callable(self, "_on_inventory_pressed"))
 	
+	# Pause menu buttons
+	if resume_button:
+		resume_button.connect("pressed", Callable(self, "_toggle_pause"))
+	if save_button:
+		save_button.connect("pressed", Callable(self, "_on_save_pressed"))
+	if main_menu_button:
+		main_menu_button.connect("pressed", Callable(self, "_on_main_menu_pressed"))
+	if quit_button:
+		quit_button.connect("pressed", Callable(self, "_on_quit_pressed"))
+	
 	_deal_initial_hand()
 	_update_ui()
 	
 	# Hide score popup initially
 	if score_popup:
 		score_popup.modulate.a = 0
+	
+	# Ensure pause menu is hidden
+	if pause_overlay:
+		pause_overlay.visible = false
 	
 	print("\n=== GAME SCENE READY ===")
 	print("   Hand size: %d" % hand.size())
@@ -703,42 +726,120 @@ func _swap_with_discard(hand_index: int):
 func _input(event):
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
+			KEY_ESCAPE:
+				# Toggle pause menu
+				_toggle_pause()
 			KEY_SPACE:
-				# Play hand with spacebar
-				if play_hand_button and not play_hand_button.disabled:
+				# Play hand with spacebar (only when not paused)
+				if not is_paused and play_hand_button and not play_hand_button.disabled:
 					_on_play_hand_pressed()
 			KEY_ENTER:
-				# Confirm discard with Enter
-				if draw_button and not draw_button.disabled:
+				# Confirm discard with Enter (only when not paused)
+				if not is_paused and draw_button and not draw_button.disabled:
 					_on_discard_confirm_pressed()
-			KEY_ESCAPE:
-				# Deselect current selection
-				if selected_tile_index != -1 or selected_discard_index != -1:
-					selected_tile_index = -1
-					selected_discard_index = -1
-					_create_hand_slots()
-					_update_ui()
 			KEY_I:
-				# Open inventory
-				_on_inventory_pressed()
+				# Open inventory (only when not paused)
+				if not is_paused:
+					_on_inventory_pressed()
 			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9:
-				# Quick select tiles 1-9
-				var tile_index = event.keycode - KEY_1
-				if tile_index < hand.size() and is_discard_phase:
-					_on_tile_selected(tile_index)
+				# Quick select tiles 1-9 (only when not paused)
+				if not is_paused:
+					var tile_index = event.keycode - KEY_1
+					if tile_index < hand.size() and is_discard_phase:
+						_on_tile_selected(tile_index)
 			KEY_0:
-				# Select tile 10
-				if 9 < hand.size() and is_discard_phase:
+				# Select tile 10 (only when not paused)
+				if not is_paused and 9 < hand.size() and is_discard_phase:
 					_on_tile_selected(9)
 			KEY_MINUS:
-				# Select tile 11
-				if 10 < hand.size() and is_discard_phase:
+				# Select tile 11 (only when not paused)
+				if not is_paused and 10 < hand.size() and is_discard_phase:
 					_on_tile_selected(10)
 			KEY_EQUAL:
-				# Select tile 12
-				if 11 < hand.size() and is_discard_phase:
+				# Select tile 12 (only when not paused)
+				if not is_paused and 11 < hand.size() and is_discard_phase:
 					_on_tile_selected(11)
 			KEY_BACKSPACE:
-				# Select tile 13
-				if 12 < hand.size() and is_discard_phase:
+				# Select tile 13 (only when not paused)
+				if not is_paused and 12 < hand.size() and is_discard_phase:
 					_on_tile_selected(12)
+
+# Pause Menu Functions
+func _toggle_pause():
+	is_paused = not is_paused
+	
+	if pause_overlay:
+		if is_paused:
+			_show_pause_menu()
+		else:
+			_hide_pause_menu()
+
+func _show_pause_menu():
+	if not pause_overlay:
+		return
+	
+	pause_overlay.visible = true
+	pause_overlay.modulate.a = 0
+	
+	# Get the panel for animation
+	var panel = pause_overlay.get_node_or_null("CenterContainer/PausePanel")
+	if panel:
+		panel.scale = Vector2(0.8, 0.8)
+		panel.pivot_offset = panel.size / 2
+	
+	# Animate in
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(pause_overlay, "modulate:a", 1.0, 0.2).set_ease(Tween.EASE_OUT)
+	if panel:
+		tween.tween_property(panel, "scale", Vector2(1.0, 1.0), 0.25).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+func _hide_pause_menu():
+	if not pause_overlay:
+		return
+	
+	var panel = pause_overlay.get_node_or_null("CenterContainer/PausePanel")
+	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(pause_overlay, "modulate:a", 0.0, 0.15).set_ease(Tween.EASE_IN)
+	if panel:
+		tween.tween_property(panel, "scale", Vector2(0.9, 0.9), 0.15).set_ease(Tween.EASE_IN)
+	
+	tween.chain().tween_callback(func(): pause_overlay.visible = false)
+
+func _on_save_pressed():
+	var save_system = get_node_or_null("/root/SaveSystem")
+	if save_system:
+		# Save current game state
+		if game_manager:
+			game_manager.set_final_stats(discards_left, plays_left)
+		save_system.save_game()
+		print("Game saved!")
+		
+		# Show feedback
+		if save_button:
+			save_button.text = "✓ Saved!"
+			await get_tree().create_timer(1.0).timeout
+			save_button.text = "💾 Save & Continue"
+
+func _on_main_menu_pressed():
+	# Save before leaving
+	var save_system = get_node_or_null("/root/SaveSystem")
+	if save_system:
+		if game_manager:
+			game_manager.set_final_stats(discards_left, plays_left)
+		save_system.save_game()
+	
+	is_paused = false
+	get_tree().change_scene_to_file("res://scenes/main/main_menu.tscn")
+
+func _on_quit_pressed():
+	# Save before quitting
+	var save_system = get_node_or_null("/root/SaveSystem")
+	if save_system:
+		if game_manager:
+			game_manager.set_final_stats(discards_left, plays_left)
+		save_system.save_game()
+	
+	get_tree().quit()
