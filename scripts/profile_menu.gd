@@ -1,8 +1,8 @@
 extends Control
 
-@onready var profile_list_container: VBoxContainer = $VBoxContainer/ScrollContainer/ProfileList
-@onready var name_input: LineEdit = $VBoxContainer/HBoxContainer/NameInput
-@onready var create_button: Button = $VBoxContainer/HBoxContainer/CreateButton
+@onready var profile_list_container: VBoxContainer = $CenterContainer/Panel/MarginContainer/VBoxContainer/ScrollContainer/ProfileList
+@onready var name_input: LineEdit = $CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer/NameInput
+@onready var create_button: Button = $CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer/CreateButton
 
 var save_system = null
 
@@ -37,11 +37,28 @@ func _refresh_list():
 func _create_profile_row(p_name: String) -> HBoxContainer:
 	var row = HBoxContainer.new()
 	row.custom_minimum_size = Vector2(0, 50)
+	row.add_theme_constant_override("separation", 10)
 	
 	# Кнопка вибору профіля
 	var select_btn = Button.new()
-	select_btn.custom_minimum_size = Vector2(200, 40)
+	select_btn.custom_minimum_size = Vector2(200, 44)
 	select_btn.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	
+	# Styling
+	var btn_style = StyleBoxFlat.new()
+	btn_style.bg_color = Color(0.15, 0.25, 0.18, 1)
+	btn_style.border_width_left = 2
+	btn_style.border_width_top = 2
+	btn_style.border_width_right = 2
+	btn_style.border_width_bottom = 2
+	btn_style.border_color = Color(0.45, 0.65, 0.5, 0.9)
+	btn_style.corner_radius_top_left = 8
+	btn_style.corner_radius_top_right = 8
+	btn_style.corner_radius_bottom_left = 8
+	btn_style.corner_radius_bottom_right = 8
+	select_btn.add_theme_stylebox_override("normal", btn_style)
+	select_btn.add_theme_color_override("font_color", Color(0.95, 0.95, 0.9))
+	select_btn.add_theme_font_size_override("font_size", 14)
 	
 	# Завантажуємо статистику
 	var stats = save_system.load_profile_stats(p_name)
@@ -55,8 +72,22 @@ func _create_profile_row(p_name: String) -> HBoxContainer:
 	
 	# Кнопка видалення
 	var delete_btn = Button.new()
-	delete_btn.text = "Delete"
-	delete_btn.custom_minimum_size = Vector2(80, 40)
+	delete_btn.text = "🗑"
+	delete_btn.custom_minimum_size = Vector2(44, 44)
+	
+	var del_style = StyleBoxFlat.new()
+	del_style.bg_color = Color(0.3, 0.15, 0.15, 1)
+	del_style.border_width_left = 2
+	del_style.border_width_top = 2
+	del_style.border_width_right = 2
+	del_style.border_width_bottom = 2
+	del_style.border_color = Color(0.6, 0.35, 0.35, 0.9)
+	del_style.corner_radius_top_left = 8
+	del_style.corner_radius_top_right = 8
+	del_style.corner_radius_bottom_left = 8
+	del_style.corner_radius_bottom_right = 8
+	delete_btn.add_theme_stylebox_override("normal", del_style)
+	delete_btn.add_theme_font_size_override("font_size", 16)
 	delete_btn.connect("pressed", Callable(self, "_on_delete_pressed").bind(p_name))
 	
 	row.add_child(delete_btn)

@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=3 uid="uid://dui1djxefnu5a"]
+[gd_scene load_steps=10 format=3 uid="uid://dui1djxefnu5a"]
 
 [ext_resource type="Script" uid="uid://cct6f5jptp40k" path="res://scripts/scenes/main_menu.gd" id="1_06t4h"]
 [ext_resource type="Texture2D" uid="uid://dgkl17bpjklpe" path="res://assets/icons/quit_button_sprite.png" id="2_fe2o3"]
@@ -15,69 +15,9 @@ region = Rect2(20, 100, 940, 230)
 atlas = ExtResource("2_m1kxf")
 region = Rect2(80, 100, 540, 160)
 
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_btxxm"]
-load_path = "res://.godot/imported/new_game_button_sprite.png-8dbeea3274db56c0321255122f077bf5.ctex"
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_wb0q5"]
-atlas = SubResource("CompressedTexture2D_btxxm")
-region = Rect2(80, 100, 540, 160)
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_q85j6"]
-load_path = "res://.godot/imported/new_game_button_sprite.png-8dbeea3274db56c0321255122f077bf5.ctex"
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_8g5eo"]
-atlas = SubResource("CompressedTexture2D_q85j6")
-region = Rect2(80, 100, 540, 160)
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_7suek"]
-load_path = "res://.godot/imported/new_game_button_sprite.png-8dbeea3274db56c0321255122f077bf5.ctex"
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_otr3d"]
-atlas = SubResource("CompressedTexture2D_7suek")
-region = Rect2(80, 100, 540, 160)
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_8ekit"]
-load_path = "res://.godot/imported/new_game_button_sprite.png-8dbeea3274db56c0321255122f077bf5.ctex"
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_n4uci"]
-atlas = SubResource("CompressedTexture2D_8ekit")
-region = Rect2(80, 100, 540, 160)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_877pj"]
 atlas = ExtResource("3_x2yvf")
 region = Rect2(80, 100, 540, 160)
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_ayp64"]
-load_path = "res://.godot/imported/continue_button_sprite.png-c8f4b3718846379018f5975fe713b8d6.ctex"
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_y2j7i"]
-atlas = SubResource("CompressedTexture2D_ayp64")
-region = Rect2(80, 100, 540, 160)
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_y1h5l"]
-load_path = "res://.godot/imported/continue_button_sprite.png-c8f4b3718846379018f5975fe713b8d6.ctex"
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_pw24t"]
-atlas = SubResource("CompressedTexture2D_y1h5l")
-region = Rect2(80, 100, 540, 160)
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_5dct7"]
-load_path = "res://.godot/imported/continue_button_sprite.png-c8f4b3718846379018f5975fe713b8d6.ctex"
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_qilvv"]
-atlas = SubResource("CompressedTexture2D_5dct7")
-region = Rect2(80, 100, 540, 160)
-
-[sub_resource type="CompressedTexture2D" id="CompressedTexture2D_jbte4"]
-load_path = "res://.godot/imported/continue_button_sprite.png-c8f4b3718846379018f5975fe713b8d6.ctex"
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_e0hcc"]
-atlas = SubResource("CompressedTexture2D_jbte4")
-region = Rect2(80, 100, 540, 160)
-
-[sub_resource type="AtlasTexture" id="AtlasTexture_1g8jr"]
-atlas = ExtResource("2_fe2o3")
-region = Rect2(50, 100, 300, 160)
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -88,51 +28,65 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_06t4h")
 
-[node name="BackgroundImage" type="Sprite2D" parent="."]
-position = Vector2(572, 349)
-scale = Vector2(1.0715609, 0.96834147)
+[node name="BackgroundImage" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 texture = ExtResource("2_uhagc")
+expand_mode = 1
+stretch_mode = 6
 
-[node name="Title" type="Sprite2D" parent="."]
-position = Vector2(578, 141)
-scale = Vector2(0.67553705, 0.67553705)
+[node name="ContentContainer" type="VBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -200.0
+offset_top = -180.0
+offset_right = 200.0
+offset_bottom = 180.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="Title" type="TextureRect" parent="ContentContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
 texture = SubResource("AtlasTexture_btxxm")
+expand_mode = 3
+stretch_mode = 5
 
-[node name="NewGameButton" type="TextureButton" parent="."]
-layout_mode = 0
-offset_left = 458.0
-offset_top = 363.0
-offset_right = 998.0
-offset_bottom = 523.0
-scale = Vector2(0.45349842, 0.45349842)
-texture_normal = SubResource("AtlasTexture_uhagc")
-texture_pressed = SubResource("AtlasTexture_wb0q5")
-texture_hover = SubResource("AtlasTexture_8g5eo")
-texture_disabled = SubResource("AtlasTexture_otr3d")
-texture_focused = SubResource("AtlasTexture_n4uci")
+[node name="ButtonsContainer" type="VBoxContainer" parent="ContentContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+alignment = 1
 
-[node name="ContinueButton" type="TextureButton" parent="."]
-layout_mode = 0
-offset_left = 458.0
-offset_top = 272.0
-offset_right = 998.0
-offset_bottom = 432.0
-scale = Vector2(0.45349842, 0.45349842)
+[node name="ContinueButton" type="TextureButton" parent="ContentContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(250, 60)
+layout_mode = 2
+size_flags_horizontal = 4
 texture_normal = SubResource("AtlasTexture_877pj")
-texture_pressed = SubResource("AtlasTexture_y2j7i")
-texture_hover = SubResource("AtlasTexture_pw24t")
-texture_disabled = SubResource("AtlasTexture_qilvv")
-texture_focused = SubResource("AtlasTexture_e0hcc")
+ignore_texture_size = true
+stretch_mode = 5
 
-[node name="QuitButton" type="TextureButton" parent="."]
-layout_mode = 0
-offset_left = 514.0
-offset_top = 457.00003
-offset_right = 814.0
-offset_bottom = 617.0
-scale = Vector2(0.45349842, 0.45349842)
-texture_normal = SubResource("AtlasTexture_1g8jr")
-texture_pressed = SubResource("AtlasTexture_1g8jr")
-texture_hover = SubResource("AtlasTexture_1g8jr")
-texture_disabled = SubResource("AtlasTexture_1g8jr")
-texture_focused = SubResource("AtlasTexture_1g8jr")
+[node name="NewGameButton" type="TextureButton" parent="ContentContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(250, 60)
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = SubResource("AtlasTexture_uhagc")
+ignore_texture_size = true
+stretch_mode = 5
+
+[node name="QuitButton" type="TextureButton" parent="ContentContainer/ButtonsContainer"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+texture_normal = ExtResource("2_fe2o3")
+ignore_texture_size = true
+stretch_mode = 5

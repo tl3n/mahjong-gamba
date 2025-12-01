@@ -1,13 +1,13 @@
 extends Control
 
-@onready var continue_button: TextureButton = $ContinueButton
-@onready var new_game_button: TextureButton = $NewGameButton
-@onready var quit_button: TextureButton = $QuitButton
-@onready var background_image: Sprite2D = $BackgroundImage
-@onready var inventory_button: TextureButton = $InventoryButton if has_node("VBoxContainer/InventoryButton") else null
+@onready var continue_button: TextureButton = $ContentContainer/ButtonsContainer/ContinueButton
+@onready var new_game_button: TextureButton = $ContentContainer/ButtonsContainer/NewGameButton
+@onready var quit_button: TextureButton = $ContentContainer/ButtonsContainer/QuitButton
+@onready var background_image: TextureRect = $BackgroundImage
+@onready var inventory_button: TextureButton = null
 
 func _ready():
-	background_image.modulate = Color(0.3, 0.3, 0.3)
+	background_image.modulate = Color(0.4, 0.4, 0.4)
 	continue_button.connect("pressed", Callable(self, "_on_continue_button_pressed"))
 	new_game_button.connect("pressed", Callable(self, "_on_new_game_button_pressed"))
 	quit_button.connect("pressed", Callable(self, "_on_quit_button_pressed"))

@@ -1,80 +1,246 @@
-[gd_scene load_steps=2 format=3 uid="uid://bl0pl8y4kefpp"]
+[gd_scene load_steps=7 format=3 uid="uid://bl0pl8y4kefpp"]
 
 [ext_resource type="Script" uid="uid://oyec6ovmulik" path="res://scripts/scenes/shop.gd" id="1_lq7f0"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.06, 0.09, 0.08, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.1, 0.15, 0.12, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.4, 0.85)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+shadow_color = Color(0, 0, 0, 0.35)
+shadow_size = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_details_panel"]
+bg_color = Color(0.08, 0.12, 0.1, 0.95)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.5, 0.38, 0.8)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
+bg_color = Color(0.15, 0.25, 0.18, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.65, 0.5, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_accent"]
+bg_color = Color(0.2, 0.35, 0.25, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.5, 0.75, 0.55, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [node name="Shop" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 317.0
-offset_top = 22.0
-offset_right = 317.0
-offset_bottom = 22.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_lq7f0")
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = -10.0
-offset_right = 119.0
-offset_bottom = 101.0
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
 
-[node name="ShopSection" type="VBoxContainer" parent="VBoxContainer"]
-layout_mode = 2
+[node name="UI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
-[node name="Label" type="Label" parent="VBoxContainer/ShopSection"]
+[node name="TopBar" type="HBoxContainer" parent="UI"]
+layout_mode = 1
+anchors_preset = 10
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -300.0
+offset_top = 10.0
+offset_right = 300.0
+offset_bottom = 50.0
+grow_horizontal = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="MoneyPanel" type="PanelContainer" parent="UI/TopBar"]
+custom_minimum_size = Vector2(140, 0)
 layout_mode = 2
-text = "Shop"
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MoneyLabel" type="Label" parent="UI/TopBar/MoneyPanel"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.9, 0.4, 1)
+theme_override_font_sizes/font_size = 18
+text = "💰 $100"
 horizontal_alignment = 1
-
-[node name="ShopSlotsContainer" type="HBoxContainer" parent="VBoxContainer/ShopSection"]
-layout_mode = 2
-
-[node name="InventoryPanel" type="Control" parent="VBoxContainer"]
-layout_mode = 2
-
-[node name="RerollButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 647.0
-offset_top = 35.0
-offset_right = 776.0
-offset_bottom = 66.0
-text = "Reroll
-"
-
-[node name="StartBlindButton" type="Button" parent="."]
-layout_mode = 0
-offset_left = 627.0
-offset_top = 530.0
-offset_right = 756.0
-offset_bottom = 561.0
-text = "Start Blind"
-
-[node name="ItemDetailsPanel" type="Panel" parent="."]
-layout_mode = 0
-offset_right = 490.0
-offset_bottom = 281.0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="ItemDetailsPanel"]
-layout_mode = 0
-offset_left = 17.0
-offset_top = 1.0
-offset_right = 79.0
-offset_bottom = 108.0
-pivot_offset = Vector2(1, 1)
-
-[node name="Rarity" type="Label" parent="ItemDetailsPanel/VBoxContainer"]
-layout_mode = 2
-
-[node name="Name" type="Label" parent="ItemDetailsPanel/VBoxContainer"]
-layout_mode = 2
-horizontal_alignment = 3
 vertical_alignment = 1
 
-[node name="Description" type="Label" parent="ItemDetailsPanel/VBoxContainer"]
+[node name="HeaderPanel" type="PanelContainer" parent="UI/TopBar"]
+custom_minimum_size = Vector2(160, 0)
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
-[node name="EffectLabel" type="Label" parent="ItemDetailsPanel/VBoxContainer"]
+[node name="TitleLabel" type="Label" parent="UI/TopBar/HeaderPanel"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 22
+text = "SHOP"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="RerollButton" type="Button" parent="UI/TopBar"]
+custom_minimum_size = Vector2(140, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.9, 1)
+theme_override_font_sizes/font_size = 14
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+text = "🎲 Reroll ($5)"
+
+[node name="MainContent" type="HBoxContainer" parent="UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 15.0
+offset_top = 60.0
+offset_right = -15.0
+offset_bottom = -55.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="LeftSection" type="VBoxContainer" parent="UI/MainContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_stretch_ratio = 1.2
+theme_override_constants/separation = 10
+
+[node name="ShopPanel" type="PanelContainer" parent="UI/MainContent/LeftSection"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/MainContent/LeftSection/ShopPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/MainContent/LeftSection/ShopPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="ShopSection" type="VBoxContainer" parent="UI/MainContent/LeftSection/ShopPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Label" type="Label" parent="UI/MainContent/LeftSection/ShopPanel/MarginContainer/VBoxContainer/ShopSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.9, 0.85, 1)
+theme_override_font_sizes/font_size = 14
+text = "Available Items"
+horizontal_alignment = 1
+
+[node name="ShopSlotsContainer" type="HBoxContainer" parent="UI/MainContent/LeftSection/ShopPanel/MarginContainer/VBoxContainer/ShopSection"]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="ItemDetailsPanel" type="PanelContainer" parent="UI/MainContent/LeftSection"]
+custom_minimum_size = Vector2(0, 120)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_details_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="UI/MainContent/LeftSection/ItemDetailsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 8
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI/MainContent/LeftSection/ItemDetailsPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Rarity" type="Label" parent="UI/MainContent/LeftSection/ItemDetailsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.6, 0.7, 0.65, 0.8)
+theme_override_font_sizes/font_size = 11
+text = "Select an item to see details..."
+
+[node name="Name" type="Label" parent="UI/MainContent/LeftSection/ItemDetailsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.5, 1)
+theme_override_font_sizes/font_size = 16
+horizontal_alignment = 1
+
+[node name="Description" type="Label" parent="UI/MainContent/LeftSection/ItemDetailsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.75, 0.85, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+autowrap_mode = 2
+
+[node name="EffectLabel" type="Label" parent="UI/MainContent/LeftSection/ItemDetailsPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 0.9, 0.6, 1)
+theme_override_font_sizes/font_size = 11
+
+[node name="RightSection" type="VBoxContainer" parent="UI/MainContent"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
+
+[node name="InventoryPanel" type="Control" parent="UI/MainContent/RightSection"]
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="StartBlindButton" type="Button" parent="UI"]
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -70.0
+offset_top = -45.0
+offset_right = 70.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 0
+theme_override_colors/font_color = Color(0.98, 0.98, 0.95, 1)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_button_accent")
+text = "Start Blind"

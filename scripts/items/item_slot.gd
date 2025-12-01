@@ -5,8 +5,8 @@ signal pressed_slot(index: int)
 var index: int = -1
 var item: Resource = null
 
-@onready var icon_node: TextureRect = $VBoxContainer/Icon
-@onready var name_label: Label = $VBoxContainer/NameLabel
+@onready var icon_node: TextureRect = $MarginContainer/VBoxContainer/Icon
+@onready var name_label: Label = $MarginContainer/VBoxContainer/NameLabel
 
 func _ready():
 	connect("pressed", Callable(self, "_on_pressed"))
@@ -19,14 +19,20 @@ func set_item(item_ref):
 	if item == null:
 		icon_node.texture = null
 		name_label.text = ""
-		modulate = Color(1, 1, 1, 0.5)
+		modulate = Color(1, 1, 1, 0.4)
 	else:
-		icon_node.texture = item.icon if item.icon else null
-		name_label.text = item.name
+		if item.icon:
+			icon_node.texture = item.icon
+		else:
+			icon_node.texture = null
+		
+		# Show item name
+		name_label.text = item.name if item.name else "???"
 		modulate = Color.WHITE
 		
+		# Color based on rarity
 		var color = _get_rarity_color(item.rarity)
-		add_theme_color_override("font_outline_color", color)
+		name_label.add_theme_color_override("font_color", color)
 		
 		name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 		name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -41,6 +47,9 @@ func _get_rarity_color(rarity: String) -> Color:
 			return Color(1.0, 0.8, 0.0)
 		_:
 			return Color.WHITE
+
+func set_index(idx: int):
+	index = idx
 
 func _on_pressed():
 	emit_signal("pressed_slot", index)

@@ -1,15 +1,15 @@
-extends Control
+extends PanelContainer
 
-@onready var spirits_grid: GridContainer = $HBoxContainer/VBoxContainer/SpiritsSection/SpiritsGrid
-@onready var spirits_label: Label = $HBoxContainer/VBoxContainer/SpiritsSection/Label
-@onready var beers_grid: GridContainer = $HBoxContainer/VBoxContainer/BeersSection/BeersGrid
-@onready var beers_label: Label = $HBoxContainer/VBoxContainer/BeersSection/Label
-@onready var icon_rect: TextureRect = $HBoxContainer/VBoxContainer2/ItemDetails/Icon
-@onready var item_name_label: Label = $HBoxContainer/VBoxContainer2/ItemDetails/ItemName
-@onready var item_desc_label: Label = $HBoxContainer/VBoxContainer2/ItemDetails/ItemDesc
-@onready var money_label: Label = $HBoxContainer/VBoxContainer2/MoneyLabel
-@onready var close_button: Button = $HBoxContainer/VBoxContainer/Buttons/CloseButton
-@onready var sell_button: Button = $HBoxContainer/VBoxContainer/Buttons/Sell
+@onready var spirits_grid: GridContainer = $MarginContainer/HBoxContainer/VBoxContainer/SpiritsSection/SpiritsGrid
+@onready var spirits_label: Label = $MarginContainer/HBoxContainer/VBoxContainer/SpiritsSection/Label
+@onready var beers_grid: GridContainer = $MarginContainer/HBoxContainer/VBoxContainer/BeersSection/BeersGrid
+@onready var beers_label: Label = $MarginContainer/HBoxContainer/VBoxContainer/BeersSection/Label
+@onready var icon_rect: TextureRect = $MarginContainer/HBoxContainer/VBoxContainer2/DetailsPanel/ItemDetails/Icon
+@onready var item_name_label: Label = $MarginContainer/HBoxContainer/VBoxContainer2/DetailsPanel/ItemDetails/ItemName
+@onready var item_desc_label: Label = $MarginContainer/HBoxContainer/VBoxContainer2/DetailsPanel/ItemDetails/ItemDesc
+@onready var money_label: Label = $MarginContainer/HBoxContainer/VBoxContainer2/MoneyLabel
+@onready var close_button: Button = $MarginContainer/HBoxContainer/VBoxContainer/Buttons/CloseButton
+@onready var sell_button: Button = $MarginContainer/HBoxContainer/VBoxContainer/Buttons/Sell
 
 @export var slot_scene: PackedScene
 var inventory_node = null

@@ -1,6 +1,47 @@
-[gd_scene load_steps=2 format=3 uid="uid://da2spatwlp1h7"]
+[gd_scene load_steps=6 format=3 uid="uid://da2spatwlp1h7"]
 
 [ext_resource type="Script" uid="uid://b4dik47ggwumy" path="res://scripts/profile_menu.gd" id="1_eds3q"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.06, 0.09, 0.08, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.1, 0.15, 0.12, 0.98)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.35, 0.55, 0.4, 0.9)
+corner_radius_top_left = 16
+corner_radius_top_right = 16
+corner_radius_bottom_right = 16
+corner_radius_bottom_left = 16
+shadow_color = Color(0, 0, 0, 0.4)
+shadow_size = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
+bg_color = Color(0.15, 0.25, 0.18, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.45, 0.65, 0.5, 0.9)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_input"]
+bg_color = Color(0.08, 0.12, 0.1, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.3, 0.5, 0.35, 0.8)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
 
 [node name="ProfileMenu" type="Control"]
 layout_mode = 3
@@ -11,7 +52,16 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_eds3q")
 
-[node name="Panel" type="Panel" parent="."]
+[node name="Background" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -19,38 +69,71 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="VBoxContainer" type="VBoxContainer" parent="."]
-layout_mode = 0
-offset_left = 426.0
-offset_top = 187.0
-offset_right = 730.0
-offset_bottom = 457.0
-alignment = 1
-
-[node name="Label" type="Label" parent="VBoxContainer"]
+[node name="Panel" type="PanelContainer" parent="CenterContainer"]
+custom_minimum_size = Vector2(420, 480)
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="CenterContainer/Panel"]
+layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 25
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 25
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="Label" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 28
 text = "SELECT PROFILE"
 horizontal_alignment = 1
 
-[node name="ScrollContainer" type="ScrollContainer" parent="VBoxContainer"]
-custom_minimum_size = Vector2(300, 200)
+[node name="HSeparator" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="ScrollContainer" type="ScrollContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(340, 220)
 layout_mode = 2
 
-[node name="ProfileList" type="VBoxContainer" parent="VBoxContainer/ScrollContainer"]
+[node name="ProfileList" type="VBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/ScrollContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
 
-[node name="HSeparator" type="HSeparator" parent="VBoxContainer"]
+[node name="HSeparator2" type="HSeparator" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 12
 
-[node name="HBoxContainer" type="HBoxContainer" parent="VBoxContainer"]
-layout_direction = 2
+[node name="NewProfileLabel" type="Label" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.85, 0.75, 1)
+theme_override_font_sizes/font_size = 14
+text = "Create New Profile"
+horizontal_alignment = 1
 
-[node name="NameInput" type="LineEdit" parent="VBoxContainer/HBoxContainer"]
-custom_minimum_size = Vector2(240, 0)
+[node name="HBoxContainer" type="HBoxContainer" parent="CenterContainer/Panel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-placeholder_text = "New Profile Name"
+theme_override_constants/separation = 12
+alignment = 1
 
-[node name="CreateButton" type="Button" parent="VBoxContainer/HBoxContainer"]
+[node name="NameInput" type="LineEdit" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(220, 40)
 layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 0.9, 1)
+theme_override_colors/font_placeholder_color = Color(0.5, 0.6, 0.55, 0.7)
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_input")
+placeholder_text = "Profile Name..."
+
+[node name="CreateButton" type="Button" parent="CenterContainer/Panel/MarginContainer/VBoxContainer/HBoxContainer"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.95, 0.9, 1)
+theme_override_font_sizes/font_size = 15
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
 text = "Create"

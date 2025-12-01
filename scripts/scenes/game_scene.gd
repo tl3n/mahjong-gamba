@@ -2,15 +2,15 @@ extends Control
 
 @onready var hand_container: HBoxContainer = get_node_or_null("UI/HandContainer")
 @onready var open_discard_container: HBoxContainer = get_node_or_null("UI/OpenDiscardContainer")
-@onready var score_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/ScoreLabel")
-@onready var target_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/TargetLabel")
-@onready var blind_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/BlindLabel")
-@onready var round_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/RoundLabel")
-@onready var combo_score_label: Label = get_node_or_null("UI/ScorePanel/VBoxContainer/ComboScoreLabel")
-@onready var discards_label: Label = get_node_or_null("UI/ControlPanel/DiscardsLabel")
-@onready var draw_button: Button = get_node_or_null("UI/ControlPanel/DrawButton")
-@onready var play_hand_button: Button = get_node_or_null("UI/ControlPanel/PlayHandButton")
-@onready var inventory_button: Button = get_node_or_null("UI/ControlPanel/InventoryButton")
+@onready var score_label: Label = get_node_or_null("UI/ScorePanel/MarginContainer/VBoxContainer/ScoreLabel")
+@onready var target_label: Label = get_node_or_null("UI/ScorePanel/MarginContainer/VBoxContainer/TargetLabel")
+@onready var blind_label: Label = get_node_or_null("UI/ScorePanel/MarginContainer/VBoxContainer/BlindLabel")
+@onready var round_label: Label = get_node_or_null("UI/ScorePanel/MarginContainer/VBoxContainer/RoundLabel")
+@onready var combo_score_label: Label = get_node_or_null("UI/ScorePanel/MarginContainer/VBoxContainer/ComboScoreLabel")
+@onready var discards_label: Label = get_node_or_null("UI/ControlPanel/MarginContainer/VBoxContainer/DiscardsLabel")
+@onready var draw_button: Button = get_node_or_null("UI/ControlPanel/MarginContainer/VBoxContainer/DrawButton")
+@onready var play_hand_button: Button = get_node_or_null("UI/ControlPanel/MarginContainer/VBoxContainer/PlayHandButton")
+@onready var inventory_button: Button = get_node_or_null("UI/ControlPanel/MarginContainer/VBoxContainer/InventoryButton")
 
 var tile_deck: TileDeck
 var game_manager: Node
@@ -126,10 +126,10 @@ func _create_hand_slots():
 
 func _create_tile_slot(index: int, tile: Tile, combo_type: String = "") -> Control:
 	var slot = VBoxContainer.new()
-	slot.custom_minimum_size = Vector2(70, 110)
+	slot.custom_minimum_size = Vector2(68, 100)
 	
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(70, 90)
+	button.custom_minimum_size = Vector2(62, 82)
 	
 	if is_discard_phase:
 		button.connect("pressed", Callable(self, "_on_tile_selected").bind(index))
@@ -137,43 +137,67 @@ func _create_tile_slot(index: int, tile: Tile, combo_type: String = "") -> Contr
 		button.disabled = true
 	
 	var tile_visual = VBoxContainer.new()
+	tile_visual.alignment = BoxContainer.ALIGNMENT_CENTER
 	button.add_child(tile_visual)
 	
 	if tile:
 		var suit_label = Label.new()
 		suit_label.text = tile._get_suit_symbol()
 		suit_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		suit_label.add_theme_font_size_override("font_size", 28)
+		suit_label.add_theme_font_size_override("font_size", 26)
+		suit_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
 		tile_visual.add_child(suit_label)
 		
 		var rank_label = Label.new()
 		rank_label.text = str(tile.rank)
 		rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		rank_label.add_theme_font_size_override("font_size", 20)
+		rank_label.add_theme_font_size_override("font_size", 18)
+		rank_label.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
 		tile_visual.add_child(rank_label)
 		
+		var base_color = tile.get_suit_color()
 		var style = StyleBoxFlat.new()
-		style.bg_color = tile.get_suit_color()
-		style.corner_radius_top_left = 5
-		style.corner_radius_top_right = 5
-		style.corner_radius_bottom_left = 5
-		style.corner_radius_bottom_right = 5
+		style.bg_color = base_color.lightened(0.15)
+		style.corner_radius_top_left = 8
+		style.corner_radius_top_right = 8
+		style.corner_radius_bottom_left = 8
+		style.corner_radius_bottom_right = 8
+		style.shadow_color = Color(0, 0, 0, 0.4)
+		style.shadow_size = 4
+		style.shadow_offset = Vector2(2, 3)
 		
-		# Combo highlighting
+		# Base border for all tiles
+		style.border_width_top = 2
+		style.border_width_bottom = 2
+		style.border_width_left = 2
+		style.border_width_right = 2
+		style.border_color = base_color.darkened(0.3)
+		
+		# Combo highlighting - override border
 		if combo_type == "pong":
+			style.border_width_top = 4
+			style.border_width_bottom = 4
+			style.border_width_left = 4
+			style.border_width_right = 4
+			style.border_color = Color(1.0, 0.75, 0.0)  # Gold for pong
+			style.shadow_color = Color(1.0, 0.8, 0.0, 0.5)
+			style.shadow_size = 6
+		elif combo_type == "pair":
 			style.border_width_top = 3
 			style.border_width_bottom = 3
 			style.border_width_left = 3
 			style.border_width_right = 3
-			style.border_color = Color(1.0, 0.84, 0.0)  # Gold for pong
-		elif combo_type == "pair":
-			style.border_width_top = 2
-			style.border_width_bottom = 2
-			style.border_width_left = 2
-			style.border_width_right = 2
-			style.border_color = Color(0.6, 0.8, 1.0)  # Light blue for pair
+			style.border_color = Color(0.4, 0.7, 1.0)  # Light blue for pair
+			style.shadow_color = Color(0.3, 0.6, 1.0, 0.4)
+			style.shadow_size = 5
+		
+		# Hover style
+		var hover_style = style.duplicate()
+		hover_style.bg_color = base_color.lightened(0.3)
 		
 		button.add_theme_stylebox_override("normal", style)
+		button.add_theme_stylebox_override("hover", hover_style)
+		button.add_theme_stylebox_override("pressed", style)
 	else:
 		var empty_label = Label.new()
 		empty_label.text = "?"
@@ -184,9 +208,10 @@ func _create_tile_slot(index: int, tile: Tile, combo_type: String = "") -> Contr
 	
 	if tile:
 		var weight_label = Label.new()
-		weight_label.text = "(%d)" % tile.weight
+		weight_label.text = "%d" % tile.weight
 		weight_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		weight_label.add_theme_font_size_override("font_size", 10)
+		weight_label.add_theme_font_size_override("font_size", 11)
+		weight_label.add_theme_color_override("font_color", Color(0.7, 0.8, 0.75, 0.9))
 		slot.add_child(weight_label)
 	
 	return slot
@@ -469,16 +494,47 @@ func _update_open_discard_display():
 		open_discard_container.add_child(slot)
 
 func _create_discard_tile_slot(index: int, tile: Tile) -> Control:
-	var button = Button.new()
-	button.custom_minimum_size = Vector2(50, 70)
-	button.text = tile.get_display_text() if tile else "?"
+	var container = VBoxContainer.new()
+	container.custom_minimum_size = Vector2(52, 70)
 	
+	var button = Button.new()
+	button.custom_minimum_size = Vector2(48, 62)
+	
+	var tile_visual = VBoxContainer.new()
+	tile_visual.alignment = BoxContainer.ALIGNMENT_CENTER
+	button.add_child(tile_visual)
+	
+	if tile:
+		var suit_label = Label.new()
+		suit_label.text = tile._get_suit_symbol()
+		suit_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		suit_label.add_theme_font_size_override("font_size", 20)
+		suit_label.add_theme_color_override("font_color", Color(0.1, 0.1, 0.1))
+		tile_visual.add_child(suit_label)
+		
+		var rank_label = Label.new()
+		rank_label.text = str(tile.rank)
+		rank_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		rank_label.add_theme_font_size_override("font_size", 14)
+		rank_label.add_theme_color_override("font_color", Color(0.15, 0.15, 0.15))
+		tile_visual.add_child(rank_label)
+	
+	var base_color = tile.get_suit_color() if tile else Color.GRAY
 	var style = StyleBoxFlat.new()
-	style.bg_color = tile.get_suit_color() if tile else Color.GRAY
-	style.corner_radius_top_left = 4
-	style.corner_radius_top_right = 4
-	style.corner_radius_bottom_left = 4
-	style.corner_radius_bottom_right = 4
+	style.bg_color = base_color.lightened(0.1).darkened(0.1)  # Slightly muted
+	style.corner_radius_top_left = 6
+	style.corner_radius_top_right = 6
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	style.shadow_color = Color(0, 0, 0, 0.3)
+	style.shadow_size = 3
+	style.shadow_offset = Vector2(1, 2)
+	
+	style.border_width_top = 1
+	style.border_width_bottom = 1
+	style.border_width_left = 1
+	style.border_width_right = 1
+	style.border_color = base_color.darkened(0.4)
 	
 	# Highlight selected discard tile
 	if index == selected_discard_index:
@@ -486,12 +542,19 @@ func _create_discard_tile_slot(index: int, tile: Tile) -> Control:
 		style.border_width_bottom = 3
 		style.border_width_left = 3
 		style.border_width_right = 3
-		style.border_color = Color.YELLOW
+		style.border_color = Color(1.0, 0.9, 0.3)
+		style.shadow_color = Color(1.0, 0.85, 0.0, 0.6)
+		style.shadow_size = 6
+	
+	var hover_style = style.duplicate()
+	hover_style.bg_color = base_color.lightened(0.2)
 	
 	button.add_theme_stylebox_override("normal", style)
-	
+	button.add_theme_stylebox_override("hover", hover_style)
 	button.connect("pressed", Callable(self, "_on_discard_tile_clicked").bind(index))
-	return button
+	
+	container.add_child(button)
+	return container
 
 func _on_discard_tile_clicked(index: int):
 	if not is_discard_phase:
