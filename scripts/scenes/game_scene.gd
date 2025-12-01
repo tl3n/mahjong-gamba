@@ -11,6 +11,8 @@ extends Control
 @onready var draw_button: Button = get_node_or_null("UI/ControlPanel/MarginContainer/VBoxContainer/DrawButton")
 @onready var play_hand_button: Button = get_node_or_null("UI/ControlPanel/MarginContainer/VBoxContainer/PlayHandButton")
 @onready var inventory_button: Button = get_node_or_null("UI/ControlPanel/MarginContainer/VBoxContainer/InventoryButton")
+@onready var hint_label: Label = get_node_or_null("UI/HintLabel")
+@onready var score_popup: Label = get_node_or_null("UI/ScorePopup")
 
 var tile_deck: TileDeck
 var game_manager: Node
@@ -47,6 +49,10 @@ func _ready():
 	
 	_deal_initial_hand()
 	_update_ui()
+	
+	# Hide score popup initially
+	if score_popup:
+		score_popup.modulate.a = 0
 	
 	print("\n=== GAME SCENE READY ===")
 	print("   Hand size: %d" % hand.size())
@@ -232,18 +238,22 @@ func _on_tile_selected(index: int):
 		_swap_with_discard(index)
 		return
 
-	# Clear previous selection highlighting
+	# Clear previous selection highlighting and reset scales
 	for i in range(hand_container.get_child_count()):
 		var child = hand_container.get_child(i)
 		if child.get_child_count() > 0:
-			var button = child.get_child(0)
-			button.remove_theme_color_override("font_color")
+			# Reset scale with animation
+			var tween = create_tween()
+			tween.tween_property(child, "scale", Vector2(1.0, 1.0), 0.1)
 
 	selected_tile_index = index
 	var selected_slot = hand_container.get_child(index)
 	if selected_slot.get_child_count() > 0:
-		var button = selected_slot.get_child(0)
-		button.add_theme_color_override("font_color", Color.YELLOW)
+		# Animate selected tile up
+		var tween = create_tween()
+		tween.set_ease(Tween.EASE_OUT)
+		tween.set_trans(Tween.TRANS_BACK)
+		tween.tween_property(selected_slot, "scale", Vector2(1.1, 1.1), 0.15)
 
 	print("Selected tile %d: %s" % [index, hand[index].get_display_text() if hand[index] else "None"])
 
@@ -289,12 +299,16 @@ func _on_play_hand_pressed():
 	print("\n=== PLAYING HAND (%d left) ===" % plays_left)
 	
 	var combo = ComboDetector.detect_combos(hand)
+	var final_score = 0
+	var combo_name = ""
 	
 	if combo.is_empty():
 		print("No combos found")
+		_show_score_popup(0, "No Combo")
 	else:
 		var base_score = ComboDetector.calculate_score(hand, combo)
-		var final_score = ComboDetector.apply_spirit_bonuses(base_score, combo, hand)
+		final_score = ComboDetector.apply_spirit_bonuses(base_score, combo, hand)
+		combo_name = combo.get("name", "Combo")
 		
 		if game_manager:
 			game_manager.add_score(final_score)
@@ -303,6 +317,8 @@ func _on_play_hand_pressed():
 			final_score, 
 			game_manager.current_score if game_manager else 0
 		])
+		
+		_show_score_popup(final_score, combo_name)
 	
 	# After playing hand, ALL tiles go to closed discard
 	_discard_hand_to_closed()
@@ -478,8 +494,63 @@ func _update_ui():
 	if play_hand_button:
 		play_hand_button.disabled = (not is_discard_phase) or (plays_left <= 0) or (hand.size() != 13)
 	
+	# Update hint message
+	_update_hint_message()
+	
 	if open_discard_container:
 		_update_open_discard_display()
+
+func _update_hint_message():
+	if not hint_label:
+		return
+	
+	if selected_discard_index != -1:
+		hint_label.text = "🔄 Select a tile from your hand to swap"
+		hint_label.add_theme_color_override("font_color", Color(1.0, 0.9, 0.5))
+	elif selected_tile_index != -1 and discards_left > 0:
+		hint_label.text = "🗑️ Press 'Discard' or click another tile"
+		hint_label.add_theme_color_override("font_color", Color(0.9, 0.8, 0.5))
+	elif discards_left <= 0 and plays_left > 0:
+		hint_label.text = "🎴 No discards left - Play your hand!"
+		hint_label.add_theme_color_override("font_color", Color(0.5, 1.0, 0.7))
+	elif plays_left <= 0:
+		hint_label.text = "⏳ Round ending..."
+		hint_label.add_theme_color_override("font_color", Color(0.8, 0.6, 0.5))
+	elif tile_deck.open_discard.size() > 0:
+		hint_label.text = "💡 Select a tile to discard, swap from open discard, or play"
+		hint_label.add_theme_color_override("font_color", Color(0.85, 0.95, 0.9))
+	else:
+		hint_label.text = "💡 Select a tile to discard or play your hand"
+		hint_label.add_theme_color_override("font_color", Color(0.85, 0.95, 0.9))
+
+func _show_score_popup(score: int, combo_name: String):
+	if not score_popup:
+		return
+	
+	# Set text
+	if score > 0:
+		score_popup.text = "+%d\n%s" % [score, combo_name]
+		score_popup.add_theme_color_override("font_color", Color(1.0, 0.95, 0.4))
+	else:
+		score_popup.text = "No Score\n%s" % combo_name
+		score_popup.add_theme_color_override("font_color", Color(0.7, 0.5, 0.4))
+	
+	# Animate popup
+	score_popup.modulate.a = 0
+	score_popup.scale = Vector2(0.5, 0.5)
+	score_popup.pivot_offset = score_popup.size / 2
+	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	
+	# Fade in and scale up
+	tween.tween_property(score_popup, "modulate:a", 1.0, 0.2).set_ease(Tween.EASE_OUT)
+	tween.tween_property(score_popup, "scale", Vector2(1.0, 1.0), 0.3).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+	
+	# Wait then fade out
+	tween.chain().tween_interval(1.0)
+	tween.chain().tween_property(score_popup, "modulate:a", 0.0, 0.5).set_ease(Tween.EASE_IN)
+	tween.chain().tween_property(score_popup, "scale", Vector2(1.2, 1.2), 0.5)
 
 func _update_open_discard_display():
 	if not open_discard_container:
@@ -627,3 +698,47 @@ func _swap_with_discard(hand_index: int):
 	
 	if discards_left <= 0:
 		print("   No more discards left for this hand.")
+
+# Keyboard shortcuts
+func _input(event):
+	if event is InputEventKey and event.pressed:
+		match event.keycode:
+			KEY_SPACE:
+				# Play hand with spacebar
+				if play_hand_button and not play_hand_button.disabled:
+					_on_play_hand_pressed()
+			KEY_ENTER:
+				# Confirm discard with Enter
+				if draw_button and not draw_button.disabled:
+					_on_discard_confirm_pressed()
+			KEY_ESCAPE:
+				# Deselect current selection
+				if selected_tile_index != -1 or selected_discard_index != -1:
+					selected_tile_index = -1
+					selected_discard_index = -1
+					_create_hand_slots()
+					_update_ui()
+			KEY_I:
+				# Open inventory
+				_on_inventory_pressed()
+			KEY_1, KEY_2, KEY_3, KEY_4, KEY_5, KEY_6, KEY_7, KEY_8, KEY_9:
+				# Quick select tiles 1-9
+				var tile_index = event.keycode - KEY_1
+				if tile_index < hand.size() and is_discard_phase:
+					_on_tile_selected(tile_index)
+			KEY_0:
+				# Select tile 10
+				if 9 < hand.size() and is_discard_phase:
+					_on_tile_selected(9)
+			KEY_MINUS:
+				# Select tile 11
+				if 10 < hand.size() and is_discard_phase:
+					_on_tile_selected(10)
+			KEY_EQUAL:
+				# Select tile 12
+				if 11 < hand.size() and is_discard_phase:
+					_on_tile_selected(11)
+			KEY_BACKSPACE:
+				# Select tile 13
+				if 12 < hand.size() and is_discard_phase:
+					_on_tile_selected(12)
