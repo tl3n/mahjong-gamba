@@ -45,6 +45,46 @@ static func detect_combos(hand: Array[Tile]) -> Dictionary:
 	
 	return best_combo if best_combo else {}
 
+# Returns tiles that are part of combos (pairs/pongs) - these "dealt damage"
+static func get_combo_tiles(hand: Array[Tile]) -> Array[Tile]:
+	var combo_tiles: Array[Tile] = []
+	var groups = _group_tiles(hand)
+	
+	for group in groups.values():
+		var count = group.size()
+		if count >= 3:
+			# Pong - all 3 tiles are part of combo
+			for i in range(3):
+				combo_tiles.append(group[i])
+		elif count >= 2:
+			# Pair - 2 tiles are part of combo
+			for i in range(2):
+				combo_tiles.append(group[i])
+	
+	return combo_tiles
+
+# Returns tiles NOT part of any combo
+static func get_non_combo_tiles(hand: Array[Tile]) -> Array[Tile]:
+	var non_combo_tiles: Array[Tile] = []
+	var groups = _group_tiles(hand)
+	
+	for group in groups.values():
+		var count = group.size()
+		if count >= 3:
+			# Extra tiles beyond the pong (4th copy)
+			for i in range(3, count):
+				non_combo_tiles.append(group[i])
+		elif count >= 2:
+			# Extra tiles beyond the pair (3rd, 4th copies)
+			for i in range(2, count):
+				non_combo_tiles.append(group[i])
+		else:
+			# Single tiles - not part of any combo
+			for tile in group:
+				non_combo_tiles.append(tile)
+	
+	return non_combo_tiles
+
 static func _group_tiles(hand: Array[Tile]) -> Dictionary:
 	var groups = {}
 	

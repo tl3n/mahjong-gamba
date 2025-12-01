@@ -16,6 +16,7 @@ var game_manager: Node
 
 var hand: Array[Tile] = []
 var selected_tile_index: int = -1
+var selected_discard_index: int = -1  # For swapping with open discard
 
 var plays_left: int = 3
 var discards_left: int = 5
@@ -90,12 +91,15 @@ func _check_ui_elements():
 		print("Creating fallback HandContainer...")
 		hand_container = HBoxContainer.new()
 		hand_container.name = "HandContainer"
+		hand_container.alignment = BoxContainer.ALIGNMENT_CENTER
 		add_child(hand_container)
-		hand_container.position = Vector2(100, get_viewport_rect().size.y - 200)
+		var viewport_size = get_viewport_rect().size
+		hand_container.position = Vector2(viewport_size.x / 2 - 500, viewport_size.y - 130)
 
 func _deal_initial_hand():
 	hand.clear()
 	selected_tile_index = -1
+	selected_discard_index = -1
 	hand = tile_deck.draw_multiple(13) 
 	is_discard_phase = true  
 	hand.sort_custom(Callable(Tile, "_sort_criterion"))
@@ -179,6 +183,12 @@ func _on_tile_selected(index: int):
 	if not hand_container:
 		return
 
+	# If a discard tile is selected, perform swap
+	if selected_discard_index >= 0:
+		_swap_with_discard(index)
+		return
+
+	# Clear previous selection highlighting
 	for i in range(hand_container.get_child_count()):
 		var child = hand_container.get_child(i)
 		if child.get_child_count() > 0:
@@ -205,7 +215,8 @@ func _discard_selected_tile():
 		return
 	
 	print("Discarding tile: %s" % tile_to_discard.get_display_text())
-	tile_deck.discard_to_closed(tile_to_discard)
+	# Discarded tiles during turn go to OPEN discard (visible to player)
+	tile_deck.discard_to_open(tile_to_discard)
 	hand.remove_at(selected_tile_index)
 	
 	selected_tile_index = -1
@@ -249,6 +260,9 @@ func _on_play_hand_pressed():
 			game_manager.current_score if game_manager else 0
 		])
 	
+	# After playing hand, ALL tiles go to closed discard
+	_discard_hand_to_closed()
+	
 	var should_end = false
 	if game_manager:
 		should_end = (game_manager.current_score >= game_manager.target_score) or (plays_left <= 0)
@@ -268,6 +282,16 @@ func _on_play_hand_pressed():
 	print("   Resetting discards to %d" % discards_left)
 	_deal_initial_hand()
 	_update_ui()
+
+# Discard entire hand to closed discard (after playing)
+func _discard_hand_to_closed():
+	print("   Discarding entire hand to closed discard...")
+	var count = hand.size()
+	for tile in hand:
+		if tile:
+			tile_deck.discard_to_closed(tile)
+	hand.clear()
+	print("   %d tiles discarded to closed" % count)
 
 func _check_final_score():
 	if not game_manager:
@@ -344,7 +368,8 @@ func _on_discard_confirm_pressed():
 	print("Confirming discard...")
 
 	var tile_to_discard = hand.pop_at(selected_tile_index)
-	tile_deck.discard_to_closed(tile_to_discard)
+	# Discarded tiles during turn go to OPEN discard (visible to player)
+	tile_deck.discard_to_open(tile_to_discard)
 	discards_left -= 1
 
 	selected_tile_index = -1
@@ -381,7 +406,11 @@ func _update_ui():
 		round_label.text = "Rounds left: %d" % plays_left
 	
 	if draw_button:
-		if is_discard_phase and selected_tile_index != -1 and discards_left > 0:
+		if is_discard_phase and selected_discard_index != -1:
+			# Discard tile selected, waiting for hand tile to swap
+			draw_button.text = "Select Hand Tile"
+			draw_button.disabled = true
+		elif is_discard_phase and selected_tile_index != -1 and discards_left > 0:
 			draw_button.text = "Discard Tile"
 			draw_button.disabled = false
 		elif discards_left <= 0:
@@ -416,6 +445,19 @@ func _create_discard_tile_slot(index: int, tile: Tile) -> Control:
 	
 	var style = StyleBoxFlat.new()
 	style.bg_color = tile.get_suit_color() if tile else Color.GRAY
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_left = 4
+	style.corner_radius_bottom_right = 4
+	
+	# Highlight selected discard tile
+	if index == selected_discard_index:
+		style.border_width_top = 3
+		style.border_width_bottom = 3
+		style.border_width_left = 3
+		style.border_width_right = 3
+		style.border_color = Color.YELLOW
+	
 	button.add_theme_stylebox_override("normal", style)
 	
 	button.connect("pressed", Callable(self, "_on_discard_tile_clicked").bind(index))
@@ -423,13 +465,72 @@ func _create_discard_tile_slot(index: int, tile: Tile) -> Control:
 
 func _on_discard_tile_clicked(index: int):
 	if not is_discard_phase:
-		print("Can only draw from discard during discard phase!")
+		print("Can only interact with discard during discard phase!")
 		return
 	
-	if selected_tile_index >= 0:
-		var tile = tile_deck.draw_from_open_discard(index)
-		if tile:
-			hand.append(tile)
-			is_discard_phase = false
-			_create_hand_slots()
-			_update_ui()
+	if discards_left <= 0:
+		print("No discards left to swap!")
+		return
+	
+	if index < 0 or index >= tile_deck.open_discard.size():
+		print("Invalid discard index!")
+		return
+	
+	# If clicking the same discard tile, deselect it
+	if selected_discard_index == index:
+		selected_discard_index = -1
+		print("Deselected discard tile")
+		_update_ui()
+		return
+	
+	# Clear hand selection when selecting from discard
+	selected_tile_index = -1
+	selected_discard_index = index
+	
+	var tile = tile_deck.open_discard[index]
+	print("Selected discard tile %d: %s - Now select a hand tile to swap" % [index, tile.get_display_text() if tile else "?"])
+	
+	_update_ui()
+
+# Swap a hand tile with the selected discard tile
+func _swap_with_discard(hand_index: int):
+	if selected_discard_index < 0 or selected_discard_index >= tile_deck.open_discard.size():
+		print("No valid discard tile selected!")
+		return
+	
+	if hand_index < 0 or hand_index >= hand.size():
+		print("Invalid hand index!")
+		return
+	
+	if discards_left <= 0:
+		print("No discards left!")
+		return
+	
+	var hand_tile = hand[hand_index]
+	var discard_tile = tile_deck.draw_from_open_discard(selected_discard_index)
+	
+	print("Taking from open discard: [%s], discarding to closed: [%s]" % [
+		discard_tile.get_display_text() if discard_tile else "?",
+		hand_tile.get_display_text() if hand_tile else "?"
+	])
+	
+	# Take tile from open discard into hand
+	hand[hand_index] = discard_tile
+	
+	# Hand tile goes to CLOSED discard
+	tile_deck.discard_to_closed(hand_tile)
+	
+	# This counts as a discard
+	discards_left -= 1
+	
+	# Clear selections
+	selected_discard_index = -1
+	selected_tile_index = -1
+	
+	_create_hand_slots()
+	_update_ui()
+	
+	print("Swap complete! Discards left: %d" % discards_left)
+	
+	if discards_left <= 0:
+		print("   No more discards left for this hand.")
