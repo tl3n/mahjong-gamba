@@ -21,7 +21,21 @@ extends Control
 @onready var main_menu_button: Button = get_node_or_null("PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer/MainMenuButton")
 @onready var quit_button: Button = get_node_or_null("PauseOverlay/CenterContainer/PausePanel/MarginContainer/VBoxContainer/ButtonsContainer/QuitButton")
 
+# Win screen
+@onready var win_overlay: Panel = get_node_or_null("WinOverlay")
+@onready var win_score_label: Label = get_node_or_null("WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer/ScoreLabel")
+@onready var win_bonus_label: Label = get_node_or_null("WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer/BonusLabel")
+@onready var win_continue_button: Button = get_node_or_null("WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer/ContinueButton")
+
+# Lose screen
+@onready var lose_overlay: Panel = get_node_or_null("LoseOverlay")
+@onready var lose_score_label: Label = get_node_or_null("LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer/ScoreLabel")
+@onready var lose_blind_label: Label = get_node_or_null("LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer/BlindLabel")
+@onready var lose_retry_button: Button = get_node_or_null("LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer/RetryButton")
+@onready var lose_menu_button: Button = get_node_or_null("LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer/MainMenuButton")
+
 var is_paused: bool = false
+var is_game_ended: bool = false
 
 var tile_deck: TileDeck
 var game_manager: Node
@@ -66,6 +80,16 @@ func _ready():
 	if quit_button:
 		quit_button.connect("pressed", Callable(self, "_on_quit_pressed"))
 	
+	# Win screen buttons
+	if win_continue_button:
+		win_continue_button.connect("pressed", Callable(self, "_on_win_continue_pressed"))
+	
+	# Lose screen buttons
+	if lose_retry_button:
+		lose_retry_button.connect("pressed", Callable(self, "_on_lose_retry_pressed"))
+	if lose_menu_button:
+		lose_menu_button.connect("pressed", Callable(self, "_on_lose_menu_pressed"))
+	
 	_deal_initial_hand()
 	_update_ui()
 	
@@ -73,9 +97,13 @@ func _ready():
 	if score_popup:
 		score_popup.modulate.a = 0
 	
-	# Ensure pause menu is hidden
+	# Ensure overlays are hidden
 	if pause_overlay:
 		pause_overlay.visible = false
+	if win_overlay:
+		win_overlay.visible = false
+	if lose_overlay:
+		lose_overlay.visible = false
 	
 	print("\n=== GAME SCENE READY ===")
 	print("   Hand size: %d" % hand.size())
@@ -395,33 +423,127 @@ func _check_final_score():
 
 func _end_round_success():
 	print("=== BLIND %d COMPLETED ===" % game_manager.current_blind)
+	is_game_ended = true
 	
 	if game_manager:
 		game_manager.set_final_stats(discards_left, plays_left)
-		game_manager._on_blind_completed()
+	
+	# Calculate bonus preview (unused plays + unused discards + base income)
+	var bonus = 0
+	bonus += plays_left * 1  # Unused plays bonus
+	bonus += discards_left * 1  # Unused discards bonus
+	bonus += 5  # Base blind income
+	
+	# Show win screen
+	_show_win_screen(bonus)
 
 func _end_round_failure():
 	print("=== GAME OVER ===")
+	is_game_ended = true
 	
+	var reached_blind = 1
+	if game_manager:
+		reached_blind = game_manager.current_blind
+	
+	# Show lose screen
+	_show_lose_screen(reached_blind)
+
+func _show_win_screen(bonus: int):
+	if not win_overlay:
+		# Fallback to old behavior
+		if game_manager:
+			game_manager._on_blind_completed()
+		return
+	
+	# Update labels
+	if win_score_label and game_manager:
+		win_score_label.text = "Score: %d / %d" % [game_manager.current_score, game_manager.target_score]
+	
+	if win_bonus_label:
+		win_bonus_label.text = "+$%d bonus" % bonus
+	
+	# Show with animation
+	win_overlay.visible = true
+	win_overlay.modulate.a = 0
+	
+	var panel = win_overlay.get_node_or_null("CenterContainer/WinPanel")
+	if panel:
+		panel.scale = Vector2(0.7, 0.7)
+		panel.pivot_offset = panel.size / 2
+	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(win_overlay, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)
+	if panel:
+		tween.tween_property(panel, "scale", Vector2(1.0, 1.0), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+func _show_lose_screen(reached_blind: int):
+	if not lose_overlay:
+		# Fallback to old behavior
+		_perform_game_over_cleanup()
+		return
+	
+	# Update labels
+	if lose_score_label and game_manager:
+		lose_score_label.text = "Score: %d / %d" % [game_manager.current_score, game_manager.target_score]
+	
+	if lose_blind_label:
+		lose_blind_label.text = "Reached Blind: %d" % reached_blind
+	
+	# Show with animation
+	lose_overlay.visible = true
+	lose_overlay.modulate.a = 0
+	
+	var panel = lose_overlay.get_node_or_null("CenterContainer/LosePanel")
+	if panel:
+		panel.scale = Vector2(0.7, 0.7)
+		panel.pivot_offset = panel.size / 2
+	
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(lose_overlay, "modulate:a", 1.0, 0.3).set_ease(Tween.EASE_OUT)
+	if panel:
+		tween.tween_property(panel, "scale", Vector2(1.0, 1.0), 0.4).set_ease(Tween.EASE_OUT).set_trans(Tween.TRANS_BACK)
+
+func _perform_game_over_cleanup():
 	var save_system = get_node_or_null("/root/SaveSystem")
 	
 	if save_system and game_manager:
 		var reached_blind = game_manager.current_blind
 		print("Updating stats: reached blind %d" % reached_blind)
 		save_system.update_profile_stats(reached_blind)
-	else:
-		print("ERROR: Cannot update stats - SaveSystem or GameManager not found!")
-		if not save_system:
-			print("  SaveSystem is null")
-		if not game_manager:
-			print("  GameManager is null")
 	
-	print("Deleting save file")
 	if save_system:
 		save_system.delete_save()
 		print("Save deleted (profile stats kept)")
+
+func _on_win_continue_pressed():
+	print("Continuing to shop...")
+	if game_manager:
+		game_manager._on_blind_completed()
+
+func _on_lose_retry_pressed():
+	print("Retrying game...")
+	_perform_game_over_cleanup()
 	
-	await get_tree().create_timer(0.5).timeout
+	# Reset game and start fresh
+	var gm = get_node_or_null("/root/GameManager")
+	if gm and gm.has_method("reset_game"):
+		gm.reset_game()
+	
+	var inventory = get_node_or_null("/root/Inventory")
+	if inventory:
+		inventory.spirits.clear()
+		inventory.beers.clear()
+		inventory.money = 10
+		inventory.emit_signal("inventory_changed")
+		inventory.emit_signal("money_changed", inventory.money)
+	
+	get_tree().change_scene_to_file("res://scenes/main/shop_scene.tscn")
+
+func _on_lose_menu_pressed():
+	print("Returning to main menu...")
+	_perform_game_over_cleanup()
 	get_tree().change_scene_to_file("res://scenes/main/main_menu.tscn")
 
 func _on_game_over_signal():
@@ -724,6 +846,10 @@ func _swap_with_discard(hand_index: int):
 
 # Keyboard shortcuts
 func _input(event):
+	# Don't process input if game has ended
+	if is_game_ended:
+		return
+	
 	if event is InputEventKey and event.pressed:
 		match event.keycode:
 			KEY_ESCAPE:

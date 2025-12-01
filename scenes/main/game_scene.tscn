@@ -1,4 +1,4 @@
-[gd_scene load_steps=9 format=3 uid="uid://5u3n2uwkytcn"]
+[gd_scene load_steps=13 format=3 uid="uid://5u3n2uwkytcn"]
 
 [ext_resource type="Script" uid="uid://cojjsqfgftwo3" path="res://scripts/scenes/game_scene.gd" id="1_sdya7"]
 
@@ -71,6 +71,40 @@ corner_radius_top_left = 10
 corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_win_overlay"]
+bg_color = Color(0.02, 0.06, 0.03, 0.9)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_win_panel"]
+bg_color = Color(0.06, 0.12, 0.08, 0.98)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.4, 0.8, 0.5, 0.95)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.2, 0.6, 0.3, 0.4)
+shadow_size = 25
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lose_overlay"]
+bg_color = Color(0.06, 0.02, 0.02, 0.9)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_lose_panel"]
+bg_color = Color(0.1, 0.06, 0.06, 0.98)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.7, 0.3, 0.25, 0.95)
+corner_radius_top_left = 24
+corner_radius_top_right = 24
+corner_radius_bottom_right = 24
+corner_radius_bottom_left = 24
+shadow_color = Color(0.5, 0.15, 0.1, 0.4)
+shadow_size = 25
 
 [node name="GameScene" type="Control"]
 layout_mode = 3
@@ -404,3 +438,159 @@ theme_override_colors/font_color = Color(0.6, 0.7, 0.65, 0.7)
 theme_override_font_sizes/font_size = 12
 text = "Press ESC to resume"
 horizontal_alignment = 1
+
+[node name="WinOverlay" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_win_overlay")
+
+[node name="CenterContainer" type="CenterContainer" parent="WinOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="WinPanel" type="PanelContainer" parent="WinOverlay/CenterContainer"]
+custom_minimum_size = Vector2(400, 420)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_win_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="WinOverlay/CenterContainer/WinPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 35
+theme_override_constants/margin_top = 35
+theme_override_constants/margin_right = 35
+theme_override_constants/margin_bottom = 35
+
+[node name="VBoxContainer" type="VBoxContainer" parent="WinOverlay/CenterContainer/WinPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="TrophyLabel" type="Label" parent="WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.9, 0.3, 1)
+theme_override_font_sizes/font_size = 52
+text = "🏆"
+horizontal_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.5, 1.0, 0.6, 1)
+theme_override_font_sizes/font_size = 36
+text = "BLIND CLEARED!"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.95, 0.9, 1)
+theme_override_font_sizes/font_size = 18
+text = "Score: 0 / 0"
+horizontal_alignment = 1
+
+[node name="BonusLabel" type="Label" parent="WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1.0, 0.85, 0.4, 1)
+theme_override_font_sizes/font_size = 16
+text = "+$0 bonus"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="ContinueButton" type="Button" parent="WinOverlay/CenterContainer/WinPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 52)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 1.0, 0.95, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_button")
+text = "➡ Continue to Shop"
+
+[node name="LoseOverlay" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_lose_overlay")
+
+[node name="CenterContainer" type="CenterContainer" parent="LoseOverlay"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="LosePanel" type="PanelContainer" parent="LoseOverlay/CenterContainer"]
+custom_minimum_size = Vector2(400, 420)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_lose_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="LoseOverlay/CenterContainer/LosePanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 35
+theme_override_constants/margin_top = 35
+theme_override_constants/margin_right = 35
+theme_override_constants/margin_bottom = 35
+
+[node name="VBoxContainer" type="VBoxContainer" parent="LoseOverlay/CenterContainer/LosePanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="SkullLabel" type="Label" parent="LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.3, 0.25, 1)
+theme_override_font_sizes/font_size = 52
+text = "💀"
+horizontal_alignment = 1
+
+[node name="TitleLabel" type="Label" parent="LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.9, 0.4, 0.35, 1)
+theme_override_font_sizes/font_size = 36
+text = "GAME OVER"
+horizontal_alignment = 1
+
+[node name="ScoreLabel" type="Label" parent="LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.8, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+text = "Score: 0 / 0"
+horizontal_alignment = 1
+
+[node name="BlindLabel" type="Label" parent="LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.65, 0.6, 1)
+theme_override_font_sizes/font_size = 16
+text = "Reached Blind: 1"
+horizontal_alignment = 1
+
+[node name="Separator" type="HSeparator" parent="LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="RetryButton" type="Button" parent="LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.9, 0.85, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_button")
+text = "🔄 Try Again"
+
+[node name="MainMenuButton" type="Button" parent="LoseOverlay/CenterContainer/LosePanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 48)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.75, 0.7, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_pause_button")
+text = "🏠 Main Menu"
