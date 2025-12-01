@@ -266,24 +266,7 @@ func _on_buy_pressed(index: int):
 		print("Not enough cash")
 		return
 	
-	var is_discount_beer = false
-	if item is Beer:
-		if item.id == "beer_discount" or item.blind_effect == "reroll_discount":
-			is_discount_beer = true
-
-	if is_discount_beer:
-		if inventory_node.spend_money(item.price):
-			print("Applying reroll discount")
-			reroll_cost = max(0, reroll_cost - int(item.bonus_value))
-			_update_reroll_button()
-			
-			shop_items[index] = null
-			_refresh_shop_display()
-			_save_shop_state()
-		else:
-			print("Not enough money for discount beer")
-		return
-
+	# Check if we can add the item to inventory
 	var can_add = false
 	if item is Spirit and inventory_node.spirits.size() < inventory_node.max_spirits:
 		can_add = true
@@ -295,11 +278,14 @@ func _on_buy_pressed(index: int):
 		return
 	
 	if inventory_node.spend_money(item.price):
-		inventory_node.add_item(item)
-		print("Purchased: %s" % item.name)
-		
-		if item is Beer and item.blind_effect == "reroll_discount":
-			_update_reroll_button()
+		var added = inventory_node.add_item(item)
+		if added:
+			print("Purchased: %s" % item.name)
+		else:
+			print("Failed to add item to inventory: %s" % item.name)
+			# Refund the money if item couldn't be added
+			inventory_node.add_money(item.price)
+			return
 		
 		shop_items[index] = null
 		_refresh_shop_display()

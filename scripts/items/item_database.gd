@@ -298,7 +298,7 @@ static var beers_data = [
 		"description": "-2 до ціни перероллу в магазині (діє 2 блайнди)",
 		"rarity": "Історична",
 		"price": 2,
-		"effect_type": "reroll_discount",
+		"blind_effect": "reroll_discount",
 		"duration": 2,
 		"bonus_value": 2.0
 	}

@@ -1,19 +1,39 @@
 extends Node
 class_name ComboDetector
 
-const COMBOS = {
-	"pair": {"name": "Пара", "multiplier": 2.0, "tiles_needed": 2},
-	"pong": {"name": "Понг", "multiplier": 3.0, "tiles_needed": 3},
-	"two_pairs": {"name": "Дві пари", "multiplier": 4.5, "tiles_needed": 4},
-	"two_pongs": {"name": "Два понга", "multiplier": 6.5, "tiles_needed": 6},
-	"three_pairs": {"name": "Три пари", "multiplier": 7.0, "tiles_needed": 6},
-	"four_pairs": {"name": "Чотири пари", "multiplier": 9.5, "tiles_needed": 8},
-	"three_pongs": {"name": "Три понга", "multiplier": 10.0, "tiles_needed": 9},
-	"five_pairs": {"name": "П'ять пар", "multiplier": 12.0, "tiles_needed": 10},
-	"four_pongs": {"name": "Чотири понга", "multiplier": 13.5, "tiles_needed": 12},
-	"six_pairs": {"name": "Шість пар", "multiplier": 14.5, "tiles_needed": 12},
-	"seven_pairs": {"name": "Сім пар", "multiplier": 17.0, "tiles_needed": 14},
-	"winning_hand": {"name": "Виграшна рука", "multiplier": 20.0, "tiles_needed": 14}
+# Individual combo multipliers for stacking
+const PAIR_MULTIPLIERS = {
+	1: 2.0,   # 1 pair = ×2.0
+	2: 4.5,   # 2 pairs = ×4.5
+	3: 7.0,   # 3 pairs = ×7.0
+	4: 9.5,   # 4 pairs = ×9.5
+	5: 12.0,  # 5 pairs = ×12.0
+	6: 14.5,  # 6 pairs = ×14.5
+	7: 17.0   # 7 pairs = ×17.0
+}
+
+const PONG_MULTIPLIERS = {
+	1: 3.0,   # 1 pong = ×3.0
+	2: 6.5,   # 2 pongs = ×6.5
+	3: 10.0,  # 3 pongs = ×10.0
+	4: 13.5   # 4 pongs = ×13.5
+}
+
+const PAIR_NAMES = {
+	1: "Пара",
+	2: "Дві пари",
+	3: "Три пари",
+	4: "Чотири пари",
+	5: "П'ять пар",
+	6: "Шість пар",
+	7: "Сім пар"
+}
+
+const PONG_NAMES = {
+	1: "Понг",
+	2: "Два понга",
+	3: "Три понга",
+	4: "Чотири понга"
 }
 
 static func detect_combos(hand: Array[Tile]) -> Dictionary:
@@ -36,14 +56,52 @@ static func detect_combos(hand: Array[Tile]) -> Dictionary:
 	print("   Pairs: %d" % pairs_count)
 	print("   Pongs: %d" % pongs_count)
 	
-	var best_combo = _determine_best_combo(pairs_count, pongs_count)
-	
-	if best_combo:
-		print("    Best combo: %s (×%.1f)" % [best_combo["name"], best_combo["multiplier"]])
-	else:
+	if pairs_count == 0 and pongs_count == 0:
 		print("    No combos found")
+		return {}
 	
-	return best_combo if best_combo else {}
+	# Build combined combo result
+	var combined_combo = _build_combined_combo(pairs_count, pongs_count)
+	
+	if combined_combo:
+		print("    Combined combo: %s (×%.1f)" % [combined_combo["name"], combined_combo["multiplier"]])
+	
+	return combined_combo if combined_combo else {}
+
+# Combines pairs and pongs into a single combo with stacked multipliers
+static func _build_combined_combo(pairs: int, pongs: int) -> Dictionary:
+	if pairs == 0 and pongs == 0:
+		return {}
+	
+	# Special case: Winning hand (4 pongs + 1 pair)
+	if pongs >= 4 and pairs >= 1:
+		return {"name": "Виграшна рука", "multiplier": 20.0, "pairs": pairs, "pongs": pongs}
+	
+	# Calculate combined multiplier: base 1.0 + (pair_mult - 1.0) + (pong_mult - 1.0)
+	var total_multiplier = 1.0
+	var combo_parts = []
+	
+	# Add pong contribution
+	if pongs > 0:
+		var pong_mult = PONG_MULTIPLIERS.get(pongs, PONG_MULTIPLIERS[4])
+		total_multiplier += (pong_mult - 1.0)
+		combo_parts.append(PONG_NAMES.get(pongs, "%d понгів" % pongs))
+	
+	# Add pair contribution
+	if pairs > 0:
+		var pair_mult = PAIR_MULTIPLIERS.get(pairs, PAIR_MULTIPLIERS[7])
+		total_multiplier += (pair_mult - 1.0)
+		combo_parts.append(PAIR_NAMES.get(pairs, "%d пар" % pairs))
+	
+	# Build combo name
+	var combo_name = " + ".join(combo_parts)
+	
+	return {
+		"name": combo_name,
+		"multiplier": total_multiplier,
+		"pairs": pairs,
+		"pongs": pongs
+	}
 
 # Returns tiles that are part of combos (pairs/pongs) - these "dealt damage"
 static func get_combo_tiles(hand: Array[Tile]) -> Array[Tile]:
@@ -142,44 +200,6 @@ static func get_combo_highlight_info(hand: Array[Tile]) -> Array[String]:
 	
 	return result
 
-static func _determine_best_combo(pairs: int, pongs: int) -> Dictionary:
-	if pongs >= 4 and pairs >= 1:
-		return COMBOS["winning_hand"]
-	
-	if pairs >= 7:
-		return COMBOS["seven_pairs"]
-	
-	if pongs >= 4:
-		return COMBOS["four_pongs"]
-	
-	if pairs >= 6:
-		return COMBOS["six_pairs"]
-	
-	if pairs >= 5:
-		return COMBOS["five_pairs"]
-	
-	if pongs >= 3:
-		return COMBOS["three_pongs"]
-	
-	if pairs >= 4:
-		return COMBOS["four_pairs"]
-	
-	if pairs >= 3:
-		return COMBOS["three_pairs"]
-	
-	if pongs >= 2:
-		return COMBOS["two_pongs"]
-	
-	if pairs >= 2:
-		return COMBOS["two_pairs"]
-	
-	if pongs >= 1:
-		return COMBOS["pong"]
-	
-	if pairs >= 1:
-		return COMBOS["pair"]
-	
-	return {}
 
 static func calculate_score(hand: Array[Tile], combo: Dictionary) -> int:
 	if hand.is_empty() or combo.is_empty():
@@ -325,12 +345,14 @@ static func _check_combo_condition(combo: Dictionary, condition: String) -> bool
 	if condition == "":
 		return true
 	
-	var combo_name = combo.get("name", "").to_lower()
 	var condition_lower = condition.to_lower()
 	
+	# Check using the pairs/pongs counts in the combo dict
 	if condition_lower.contains("pair") or condition_lower.contains("пар"):
-		return combo_name.contains("пар")
+		return combo.get("pairs", 0) > 0
 	elif condition_lower.contains("pong") or condition_lower.contains("понг"):
-		return combo_name.contains("понг")
+		return combo.get("pongs", 0) > 0
 	
+	# Fallback to name check
+	var combo_name = combo.get("name", "").to_lower()
 	return combo_name.contains(condition_lower)
