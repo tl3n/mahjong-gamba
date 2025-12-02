@@ -206,9 +206,26 @@ static func calculate_score(hand: Array[Tile], combo: Dictionary) -> int:
 		return 0
 	
 	var base_score = 0
+	var inventory = Inventory
+	var weight_multiplier = 1.0 # Базовий множник
+	
+	if inventory:
+		for spirit in inventory.spirits:
+			if spirit.effect_type == "unsuited_weight_multiplier":
+				weight_multiplier *= spirit.effect_value
+				print("   Spirit of Weight multiplier active: x%.1f" % weight_multiplier)
+				break # Припускаємо, що множник не стакається
+
 	for tile in hand:
 		if tile:
-			base_score += tile.weight
+			var tile_weight = tile.weight
+			
+			# Якщо тайл без масті (вага 10) застосовуємо множник
+			if tile_weight == 10 and weight_multiplier > 1.0: # Тайли без масті важать 10 
+				tile_weight = int(tile_weight * weight_multiplier)
+				print("   Applying x%.1f to unsuited tile (Weight: %d)" % [weight_multiplier, tile_weight])
+
+			base_score += tile_weight
 	
 	var multiplier = combo.get("multiplier", 1.0)
 	

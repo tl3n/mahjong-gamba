@@ -11,12 +11,12 @@
 atlas = ExtResource("2_x2yvf")
 region = Rect2(20, 100, 940, 230)
 
-[sub_resource type="AtlasTexture" id="AtlasTexture_uhagc"]
-atlas = ExtResource("2_m1kxf")
-region = Rect2(80, 100, 540, 160)
-
 [sub_resource type="AtlasTexture" id="AtlasTexture_877pj"]
 atlas = ExtResource("3_x2yvf")
+region = Rect2(80, 100, 540, 160)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_uhagc"]
+atlas = ExtResource("2_m1kxf")
 region = Rect2(80, 100, 540, 160)
 
 [node name="MainMenu" type="Control"]
