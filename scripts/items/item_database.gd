@@ -238,6 +238,16 @@ static var spirits_data = [
 		"effect_type": "unsuited_weight_multiplier",
 		"effect_value": 2.0,   # Множник
 		"condition": ""
+	},
+	{
+		"id": "spirit_speed_mult",
+		"name": "Дух Швидкості (Мульт)",
+		"description": "Фінальний рахунок ×2 за кожен використаний хід у раунді.",
+		"rarity": "Міфічна", 
+		"price": 8, 
+		"effect_type": "move_multiplier",
+		"effect_value": 2.0,   # Базовий множник за дію
+		"condition": ""
 	}
 ]
 

@@ -244,64 +244,79 @@ static func apply_spirit_bonuses(base_score: int, combo: Dictionary, hand: Array
 	var flat_bonuses: int = 0
 	
 	var inventory = Inventory
-	if not inventory:
+	var game_manager = GameManager
+	if not inventory or not game_manager: 
 		return final_score
+	
+	# 1. Розрахунок використаних скидів (використовується для Духа Швидкості)
+	var used_discards = game_manager.base_discards - game_manager.discards_left
+	var is_move_multiplier_processed = false 
 	
 	print("\n Applying spirit bonuses:")
 	
 	for spirit in inventory.spirits:
 		match spirit.effect_type:
 			
+			"move_multiplier":
+				if not is_move_multiplier_processed:
+					var move_mult_base = spirit.effect_value 
+					if move_mult_base > 0 and used_discards > 0:
+						var bonus = int(move_mult_base * float(used_discards))
+						flat_bonuses += bonus
+						print("    + %s: +%d очок (Ходи: %d * %.1f)" % [spirit.name, bonus, used_discards, move_mult_base])
+						is_move_multiplier_processed = true
+				
 			"flat_bonus":
 				var bonus = int(spirit.effect_value)
 				flat_bonuses += bonus
-				print("   + %s: +%d очок" % [spirit.name, bonus])
-			
+				print("    + %s: +%d очок" % [spirit.name, bonus])
+				
 			"suit_bonus":
 				var bonus = _calculate_suit_bonus(hand, spirit)
 				if bonus > 0:
 					flat_bonuses += bonus
-					print("   + %s: +%d очок (масть)" % [spirit.name, bonus])
+					print("    + %s: +%d очок (масть)" % [spirit.name, bonus])
 			
 			"tile_bonus":
 				var bonus = hand.size() * int(spirit.effect_value)
 				flat_bonuses += bonus
-				print("   + %s: +%d очок (%d×%d)" % [spirit.name, bonus, hand.size(), int(spirit.effect_value)])
-			
+				print("    + %s: +%d очок (%d×%d)" % [spirit.name, bonus, hand.size(), int(spirit.effect_value)])
+				
 			"combo_flat_bonus":
 				if _check_combo_condition(combo, spirit.condition):
 					var bonus = int(spirit.effect_value)
 					flat_bonuses += bonus
-					print("   + %s: +%d очок (комбо)" % [spirit.name, bonus])
-			
+					print("    + %s: +%d очок (комбо)" % [spirit.name, bonus])
+					
 			"rank_bonus":
 				var bonus = _calculate_rank_bonus(hand, spirit)
 				if bonus > 0:
 					flat_bonuses += bonus
-					print("   + %s: +%d очок (ранг)" % [spirit.name, bonus])
+					print("    + %s: +%d очок (ранг)" % [spirit.name, bonus])
 			
 			"global_multiplier":
 				multipliers.append(spirit.effect_value)
-				print("   × %s: ×%.1f" % [spirit.name, spirit.effect_value])
+				print("    × %s: ×%.1f" % [spirit.name, spirit.effect_value])
 			
 			"combo_multiplier":
 				if _check_combo_condition(combo, spirit.condition):
 					multipliers.append(spirit.effect_value)
-					print("   × %s: ×%.2f (комбо)" % [spirit.name, spirit.effect_value])
+					print("    × %s: ×%.2f (комбо)" % [spirit.name, spirit.effect_value])
 			
 			"suit_multiplier":
 				if _has_suit_tiles(hand, spirit.condition):
 					multipliers.append(spirit.effect_value)
-					print("   × %s: ×%.2f (масть)" % [spirit.name, spirit.effect_value])
+					print("    × %s: ×%.2f (масть)" % [spirit.name, spirit.effect_value])
 	
 	final_score += flat_bonuses
+	print("     flat bonuses: %d" % flat_bonuses)
 	if flat_bonuses > 0:
-		print("   After flat bonuses: %d" % final_score)
+		print("    After flat bonuses: %d" % final_score)
 	
 	for mult in multipliers:
 		final_score = int(final_score * mult)
 	
-	print("   Final score with bonuses: %d" % final_score)
+	print("    Final score with bonuses: %d" % final_score)
 	return final_score
 
 static func _calculate_suit_bonus(hand: Array[Tile], spirit: Spirit) -> int:
