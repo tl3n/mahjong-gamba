@@ -27,6 +27,8 @@ var active_extra_discards: int = 0
 var active_greed_money_bonus: int = 0      
 var active_spirit_round_penalty: int = 0   
 
+var active_move_multiplier: float = 0.0
+
 func _ready():
 	print("GameManager initialized")
 	_recalculate_rounds()
@@ -56,6 +58,22 @@ func _update_beer_durations():
 		inventory.remove_item(beer)
 	
 	inventory.emit_signal("inventory_changed")
+	
+func _calculate_move_multiplier():
+	var inventory = get_node_or_null("/root/Inventory")
+	active_move_multiplier = 0.0
+	
+	if inventory:
+		for spirit in inventory.spirits:
+			if spirit == null: continue
+			
+			# Обробка Духа Швидкості
+			if spirit.effect_type == "move_multiplier":
+				active_move_multiplier = spirit.effect_value
+				print("  [SPIRIT] Move Multiplier set to x%.1f" % active_move_multiplier)
+				return active_move_multiplier # Повертаємо, щоб зупинити цикл, якщо він не стакається
+	
+	return active_move_multiplier
 
 func _apply_beer_effects():
 	print("Applying beer effects for this round...")
@@ -86,6 +104,7 @@ func _apply_beer_effects():
 				
 	
 func _recalculate_rounds():
+	_calculate_move_multiplier()
 	rounds_per_blind = base_rounds_per_blind
 	
 	active_greed_money_bonus = 0
@@ -204,6 +223,8 @@ func reset_game():
 	
 	active_greed_money_bonus = 0     
 	active_spirit_round_penalty = 0   
+	
+	active_move_multiplier = 0.0
 	
 	_recalculate_rounds() 
 	

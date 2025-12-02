@@ -228,6 +228,26 @@ static var spirits_data = [
 		"effect_value": -1.0,  # Штраф до раундів (-1 раунд)
 		"bonus_value": 2.0,   # Бонус до грошей (+1 валюта)
 		"condition": ""
+	},
+	{
+		"id": "spirit_weight",
+		"name": "Дух Ваги",
+		"description": "×2.0 до базової ваги тайлів без масті",
+		"rarity": "Міфічна", 
+		"price": 8, 
+		"effect_type": "unsuited_weight_multiplier",
+		"effect_value": 2.0,   # Множник
+		"condition": ""
+	},
+	{
+		"id": "spirit_speed_mult",
+		"name": "Дух Швидкості (Мульт)",
+		"description": "Фінальний рахунок ×2 за кожен використаний хід у раунді.",
+		"rarity": "Міфічна", 
+		"price": 8, 
+		"effect_type": "move_multiplier",
+		"effect_value": 2.0,   # Базовий множник за дію
+		"condition": ""
 	}
 ]
 
