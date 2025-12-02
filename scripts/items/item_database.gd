@@ -241,7 +241,7 @@ static var spirits_data = [
 	},
 	{
 		"id": "spirit_speed_mult",
-		"name": "Дух Швидкості (Мульт)",
+		"name": "Дух Швидкості",
 		"description": "Фінальний рахунок ×2 за кожен використаний хід у раунді.",
 		"rarity": "Міфічна", 
 		"price": 8, 
